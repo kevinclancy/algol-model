@@ -108,19 +108,7 @@ _⇒ₗ_ {c} {ℓ} {c'} {ℓ'} P Q = space
     open import Data.Product.Relation.Binary.Pointwise.NonDependent
 
     _∼p×q_ : Rel (|P| × |Q|) _ -- (ℓ₁ ⊔ ℓ₁' ⊔ ℓ₂ ⊔ ℓ₂' ⊔ c ⊔ c')
-    p,q ∼p×q p',q' = ((p ∼p p') → (q ∼q q')) × ((q ≁q q') → (p ≁p p'))
-      where
-        p : |P|
-        p = proj₁ p,q
-
-        q : |Q|
-        q = proj₂ p,q
-
-        p' : |P|
-        p' = proj₁ p',q'
-
-        q' : |Q|
-        q' = proj₂ p',q'
+    (p , q) ∼p×q (p' , q') = ((p ∼p p') → (q ∼q q')) × ((q ≁q q') → (p ≁p p'))
 
     space : CoherentSpace _ _
     space = record 
@@ -227,9 +215,11 @@ CohL {c} {ℓ} = record
   ; identityʳ = (λ {A} {B} {f} → identityʳ {A} {B} {f})
   ; identity² = (λ {A} → identityˡ {A} {A} {identity {A}}) 
   ; equiv = λ {A} {B} → equiv {A} {B}
-  ; ∘-resp-≈ = {!!}
+  ; ∘-resp-≈ = λ {A} {B} {C} {f} {g} {h} {i} →  ∘-resp-≈ {A} {B} {C} {f} {g} {h} {i}
   }
   where
+    
+
     _⇒'_ : CoherentSpace c ℓ → CoherentSpace c ℓ → Set _
     _⇒'_ P Q = CoherentSpace.Point (P ⇒ₗ Q)
 
@@ -430,4 +420,15 @@ CohL {c} {ℓ} = record
             ab≈a'b : (a , b) ≈ab (a' , b)
             ab≈a'b = (a≈a' , ≈b-refl)
 
-    
+    ∘-resp-≈ : {A B C : CoherentSpace c ℓ} {f h : B ⇒' C} {g i : A ⇒' B} → (_≈'_ {B} {C} f h) → (_≈'_ {A} {B} g i) → (_≈'_ {A} {C} (comp {A} {B} {C} f g) (comp {A} {B} {C} h i))
+    ∘-resp-≈ {A} {B} {C} {f} {h} {g} {i} (bc∈f→bc∈h , bc∈h→bc∈f) (ab∈g→ab∈i , ab∈i→ab∈g) = ac∈f∘g→ac∈h∘i , ac∈h∘i→ac∈f∘g
+      where
+        _∘ABC_ = comp {A} {B} {C}
+        |A| = CoherentSpace.TokenSet A
+        |C| = CoherentSpace.TokenSet C
+
+        ac∈f∘g→ac∈h∘i : ∀ {a : |A|} {c : |C|} → (a , c) ∈ (proj₁ $ f ∘ABC g) → (a , c) ∈ (proj₁ $ h ∘ABC i)
+        ac∈f∘g→ac∈h∘i {a} {c} (b , (ab∈g , bc∈f)) = b , ab∈g→ab∈i ab∈g , bc∈f→bc∈h bc∈f 
+
+        ac∈h∘i→ac∈f∘g : ∀ {a : |A|} {c : |C|} → (a , c) ∈ (proj₁ $ h ∘ABC i) → (a , c) ∈ (proj₁ $ f ∘ABC g)
+        ac∈h∘i→ac∈f∘g {a} {c} (b , (ab∈i , bc∈h)) = b , ab∈i→ab∈g ab∈i , bc∈h→bc∈f bc∈h
