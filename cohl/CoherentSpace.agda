@@ -31,8 +31,12 @@ record CoherentSpace c ℓ : Set (suc (c ⊔ ℓ)) where
     ∼-respˡ-≈ : _∼_ Respectsˡ _≈_
     ≈→∼ : ∀ {a b} → (a ≈ b) → (a ∼ b)
     ∼-sym  : Symmetric _∼_
+    ∼-refl : Reflexive _∼_ 
 
     ≈-isEquivalence : (IsEquivalence _≈_)
+
+  ∼-respʳ-≈ : _∼_ Respectsʳ _≈_ 
+  ∼-respʳ-≈ {x} {y} {z} y≈z x∼y = ∼-sym $ ∼-respˡ-≈ y≈z (∼-sym x∼y)
 
   -- The inconsistency relation
   _≁_ : Rel TokenSet _
@@ -88,6 +92,7 @@ CoherentSpace._∼_ CoherentSpaceBool = _≡_
 CoherentSpace.∼-respˡ-≈ CoherentSpaceBool {a} {b} {c} b≡c b≡a = PE.trans (PE.sym b≡c) b≡a
 CoherentSpace.≈→∼ CoherentSpaceBool a≡b = a≡b
 CoherentSpace.∼-sym CoherentSpaceBool = PE.sym
+CoherentSpace.∼-refl CoherentSpaceBool = PE.refl
 CoherentSpace.≈-isEquivalence CoherentSpaceBool = PE.isEquivalence
 
 _⇒ₗ_ : ∀ {c ℓ c' ℓ'} → (P : CoherentSpace c ℓ) → (Q : CoherentSpace c' ℓ') → 
@@ -102,8 +107,10 @@ _⇒ₗ_ {c} {ℓ} {c'} {ℓ'} P Q = space
       (TokenSet to |Q| ; _∼_ to _∼q_ ; _≁_ to _≁q_ ; _≈_ to _≈q_ ; ∼-refl to ∼q-refl ; ∼-sym to ∼q-sym  ;
        ∼-respˡ-≈ to ∼q-respˡ-≈q)
 
-    open IsEquivalence (CoherentSpace.≈-isEquivalence P) renaming (sym to ≈p-sym ; trans to ≈p-trans)
-    open IsEquivalence (CoherentSpace.≈-isEquivalence Q) renaming (sym to ≈q-sym ; trans to ≈q-trans)
+    open IsEquivalence (CoherentSpace.≈-isEquivalence P) renaming 
+      (sym to ≈p-sym ; trans to ≈p-trans ; refl to ≈p-refl)
+    open IsEquivalence (CoherentSpace.≈-isEquivalence Q) renaming 
+      (sym to ≈q-sym ; trans to ≈q-trans ; refl to ≈q-refl)
 
     open import Data.Product.Relation.Binary.Pointwise.NonDependent
 
@@ -117,6 +124,7 @@ _⇒ₗ_ {c} {ℓ} {c'} {ℓ'} P Q = space
       ; _∼_ = _∼p×q_
       ; ≈-isEquivalence = isEquivalence-≈p×q
       ; ∼-sym = ∼-sym
+      ; ∼-refl = ∼-refl
       ; ∼-respˡ-≈ = ∼p×q-respˡ-≈p×q
       ; ≈→∼ = ≈p×q→∼p×q
       }
@@ -201,7 +209,16 @@ _⇒ₗ_ {c} {ℓ} {c'} {ℓ'} P Q = space
                 q≁q' : q ≁q q'
                 q≁q' = CoherentSpace.≁-sym Q q'≁q
 
+        ∼-refl : Reflexive _∼p×q_
+        ∼-refl {p , q} = p∼p→q∼q , q≁q→p≁p 
+          where
+            p∼p→q∼q : p ∼p p → q ∼q q
+            p∼p→q∼q p∼p = ∼q-refl
+            
+            q≁q→p≁p : q ≁q q → p ≁p p
+            q≁q→p≁p q≁q = inj₁ ≈p-refl
 
+            
 CohL : ∀ {c ℓ} → Category _ _ _
 CohL {c} {ℓ} = record
   { Obj = CoherentSpace c ℓ 
