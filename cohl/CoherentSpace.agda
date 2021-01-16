@@ -219,7 +219,7 @@ _⇒ₗ_ {c} {ℓ} {c'} {ℓ'} P Q = space
             q≁q→p≁p q≁q = inj₁ ≈p-refl
 
             
-CohL : ∀ {c ℓ} → Category _ _ _
+CohL : ∀ {c ℓ} → Category (suc c ⊔ suc ℓ) (suc c ⊔ ℓ) c
 CohL {c} {ℓ} = record
   { Obj = CoherentSpace c ℓ 
   ; _⇒_ = _⇒'_

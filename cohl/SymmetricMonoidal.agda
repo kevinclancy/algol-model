@@ -1,5 +1,7 @@
 module SymmetricMonoidal where
 
+open import Level
+
 open import Function using (_$_)
 open import Data.Product
 open import Data.Sum hiding ([_,_])
@@ -7,6 +9,7 @@ open import Data.Empty
 
 open import Relation.Binary
 open import Relation.Unary
+open import Relation.Unary.Properties using (⊆-refl)
 open import Relation.Nullary
 
 open import Categories.Category
@@ -51,7 +54,7 @@ SMCC-CohL {c} {ℓ} = record
        ⊗ = record
          { F₀ = F₀
          ; F₁ = λ {A×B} {C×D} → F₁ {A×B} {C×D} 
-         ; identity = {!!}
+         ; identity = λ {A} → identity {A}
          ; homomorphism = {!!} 
          ; F-resp-≈ = {!!}
          }
@@ -143,8 +146,9 @@ SMCC-CohL {c} {ℓ} = record
            F₁ : {(A , B) : Obj × Obj} → {(C , D) : Obj × Obj} → 
                 (Product CohL' CohL' [ (A , B) , (C , D) ]) → 
                 (CohL' [ F₀ (A , B) , F₀ (C , D) ])  
-           F₁ {A , B} {C , D} ((f , f-isPoint , f-Respects-≈A⊗C) , (g , g-isPoint , g-Respects-B⊗D)) = f⊗g 
+           F₁ {A , B} {C , D} ((f , f-isPoint , f-Respects-≈A⊗C) , (g , g-isPoint , g-Respects-≈B⊗D)) = f⊗g 
              where
+               --[[[
                A⊗B⇒ₗC⊗D : CoherentSpace _ _ 
                A⊗B⇒ₗC⊗D = ((F₀ $ A , B) ⇒ₗ (F₀ $ C , D))
                
@@ -222,4 +226,18 @@ SMCC-CohL {c} {ℓ} = record
                            ¬ab∼a'b' (a∼a' , b∼b') = ⊥-elim $ ¬cd∼c'd' (a∼a'→c∼c' a∼a' , b∼b'→d∼d' b∼b') 
 
                    P-Respects-≈ : P Respects _≈_  
-                   P-Respects-≈ = {!  !}
+                   P-Respects-≈ ((a , b) , (c , d)) (ac∈f , bd∈g) = f-Respects-≈A⊗C (a , c) ac∈f , g-Respects-≈B⊗D (b , d) bd∈g
+               --]]]
+
+           identity : {(A , B) : Obj × Obj} → _[_≈_] CohL' {F₀ $ A , B} {F₀ $ A , B} (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL') {A , B})) (Category.id CohL' {F₀ $ A , B})
+           identity {A , B} = (λ {x} → id⊗id⊆id {x}) , (λ {x} → id⊆id⊗id {x})
+             where
+               id  = proj₁ (Category.id {suc c ⊔ suc ℓ} {suc c ⊔ ℓ} {c} CohL' {F₀ $ A , B})
+               id⊗id  = proj₁ (F₁ {A , B} {A , B} (Category.id {suc c ⊔ suc ℓ ⊔ (suc c ⊔ suc ℓ)} {suc c ⊔ ℓ ⊔ (suc c ⊔ ℓ)} {c ⊔ c} (Product CohL' CohL') {A , B}))
+
+               id⊗id⊆id : id⊗id ⊆ id
+               id⊗id⊆id {(a , b) , (a' , b')} (a≈a' , b≈b') = (a≈a' , b≈b')
+
+               id⊆id⊗id : id ⊆ id
+               id⊆id⊗id {(a , b) , (a' , b')} (a≈a' , b≈b') = (a≈a' , b≈b')
+
