@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 module SymmetricMonoidal where
 
 open import Level
@@ -8,6 +10,7 @@ open import Data.Sum hiding ([_,_])
 open import Data.Empty
 
 open import Relation.Binary
+open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Relation.Unary
 open import Relation.Unary.Properties using (⊆-refl)
 open import Relation.Nullary
@@ -28,8 +31,10 @@ SMCC-CohL {c} {ℓ} = record
   ; symmetric = {!!}
   }
   where
+    
     CohL' = CohL {c} {ℓ}
-    Obj = Category.Obj CohL'
+    open Category CohL' hiding (_≈_ ; id)
+    
 
     monoidal : Monoidal CohL'
     monoidal = record
@@ -55,10 +60,16 @@ SMCC-CohL {c} {ℓ} = record
          { F₀ = F₀
          ; F₁ = λ {A×B} {C×D} → F₁ {A×B} {C×D} 
          ; identity = λ {A} → identity {A}
-         ; homomorphism = {!!} 
+         ; homomorphism = 
+             λ {X} {Y} {Z} {f} {g} → 
+               let hom : CohL' [ (F₁ (Product CohL' CohL' [ g ∘ f ]))  ≈ CohL' [ F₁ g ∘ F₁ f ] ]
+                   hom = {!!}
+               in hom
          ; F-resp-≈ = {!!}
          }
          where
+           open Category.Equiv CohL' 
+
            F₀ : (Obj × Obj) → Obj
            F₀ (A , B) = A⊗B
              --[[[
@@ -232,12 +243,36 @@ SMCC-CohL {c} {ℓ} = record
            identity : {(A , B) : Obj × Obj} → _[_≈_] CohL' {F₀ $ A , B} {F₀ $ A , B} (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL') {A , B})) (Category.id CohL' {F₀ $ A , B})
            identity {A , B} = (λ {x} → id⊗id⊆id {x}) , (λ {x} → id⊆id⊗id {x})
              where
-               id  = proj₁ (Category.id {suc c ⊔ suc ℓ} {suc c ⊔ ℓ} {c} CohL' {F₀ $ A , B})
-               id⊗id  = proj₁ (F₁ {A , B} {A , B} (Category.id {suc c ⊔ suc ℓ ⊔ (suc c ⊔ suc ℓ)} {suc c ⊔ ℓ ⊔ (suc c ⊔ ℓ)} {c ⊔ c} (Product CohL' CohL') {A , B}))
+               id  = proj₁ (Category.id CohL' {F₀ $ A , B})
+               id⊗id  = proj₁ (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL') {A , B}))
 
                id⊗id⊆id : id⊗id ⊆ id
                id⊗id⊆id {(a , b) , (a' , b')} (a≈a' , b≈b') = (a≈a' , b≈b')
 
-               id⊆id⊗id : id ⊆ id
+               id⊆id⊗id : id ⊆ id⊗id
                id⊆id⊗id {(a , b) , (a' , b')} (a≈a' , b≈b') = (a≈a' , b≈b')
 
+
+
+           module _ {X Y Z : Obj × Obj} {f : Product CohL' CohL' [ X , Y ]} {g : Product CohL' CohL' [ Y , Z ]} where
+
+
+             CohL'×CohL' : Category _ _ _
+             CohL'×CohL' = Product CohL' CohL'
+
+             -- I could make aliases for different partial applications of _∘_, 
+             -- or maybe a new notation with more arguments explicit:  C [ X - f - Y - g - Z ] 
+             --
+             -- But the provided shorthands seem much more readable for this. 
+             -- why is type inference failing here? Shouldn't we infer the correct arguments from f and g?
+             -- 
+             -- I could make my own version of this where X, Y, and Z are explicit. But I should ask about this
+             -- on reddit.
+             --
+             --
+
+             test : CohL'×CohL' [ X , Z ] 
+             test = CohL'×CohL' [ g ∘ f ] -- why can't we infer the arguments {X} {Y} {Z} here? 
+
+             hom : CohL' [ (F₁ (Product CohL' CohL' [ g ∘ f ]))  ≈ CohL' [ F₁ g ∘ F₁ f ] ]
+             hom = {!!}
