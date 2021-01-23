@@ -24,6 +24,14 @@ open import Categories.Functor.Bifunctor
 open import CoherentSpace
 
 
+_∣_⇒_⇒_[_∘_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y Z : Category.Obj C) → (g : C [ Y , Z ]) → (f : C [ X , Y ]) → C [ X , Z ]
+C ∣ X ⇒ Y ⇒ Z [ g ∘ f ] = (Category._∘_ C g f) 
+
+_∣_⇒_[_≈_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y : Category.Obj C) → (g : C [ X , Y ]) → (f : C [ X , Y ]) → Set _
+C ∣ X ⇒ Y [ g ≈ f ] = (Category._≈_ C g f) 
+
+
+
 SMCC-CohL : ∀ {c} {ℓ} → SymmetricMonoidalCategory _ _ _
 SMCC-CohL {c} {ℓ} = record
   { U = CohL {c} {ℓ} 
@@ -53,19 +61,13 @@ SMCC-CohL {c} {ℓ} = record
       ; pentagon = {!!}
       }
       where
-       TokenSet = CoherentSpace.TokenSet
-
        ⊗ : Bifunctor CohL' CohL' CohL'
        ⊗ = record
          { F₀ = F₀
          ; F₁ = λ {A×B} {C×D} → F₁ {A×B} {C×D} 
          ; identity = λ {A} → identity {A}
-         ; homomorphism = 
-             λ {X} {Y} {Z} {f} {g} → 
-               let hom : CohL' [ (F₁ (Product CohL' CohL' [ g ∘ f ]))  ≈ CohL' [ F₁ g ∘ F₁ f ] ]
-                   hom = {!!}
-               in hom
-         ; F-resp-≈ = {!!}
+         ; homomorphism = λ {X} {Y} {Z} {f} {g} → hom {X} {Y} {Z} {f} {g}
+         ; F-resp-≈ = λ {A} {B} {f} {g} → F-resp-≈ {A} {B} {f} {g}
          }
          where
            open Category.Equiv CohL' 
@@ -241,6 +243,7 @@ SMCC-CohL {c} {ℓ} = record
                --]]]
 
            identity : {(A , B) : Obj × Obj} → _[_≈_] CohL' {F₀ $ A , B} {F₀ $ A , B} (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL') {A , B})) (Category.id CohL' {F₀ $ A , B})
+           --[[[
            identity {A , B} = (λ {x} → id⊗id⊆id {x}) , (λ {x} → id⊆id⊗id {x})
              where
                id  = proj₁ (Category.id CohL' {F₀ $ A , B})
@@ -251,28 +254,42 @@ SMCC-CohL {c} {ℓ} = record
 
                id⊆id⊗id : id ⊆ id⊗id
                id⊆id⊗id {(a , b) , (a' , b')} (a≈a' , b≈b') = (a≈a' , b≈b')
-
-
-
+           --]]]
+           
            module _ {X Y Z : Obj × Obj} {f : Product CohL' CohL' [ X , Y ]} {g : Product CohL' CohL' [ Y , Z ]} where
 
+             _∘CC_ = Category._∘_ (Product CohL' CohL') {X} {Y} {Z}
+             _∘C_ = Category._∘_ CohL' {F₀ X} {F₀ Y} {F₀ Z}
+             _≈C_ = Category._≈_ CohL' {F₀ X} {F₀ Z}
 
-             CohL'×CohL' : Category _ _ _
-             CohL'×CohL' = Product CohL' CohL'
+             hom : (F₁ {X} {Z} $ g ∘CC f) ≈C ((F₁ {Y} {Z} g) ∘C (F₁ {X} {Y} f))
+             --[[[
+             hom = F[g∘f]⊆F[g]∘F[f] , F[g]∘F[f]⊆F[g∘f]
+               where
+                 pred-F[g∘f] = proj₁ (F₁ {X} {Z} (g ∘CC f))
+                 pred-F[g]∘F[f] = proj₁ ((F₁ {Y} {Z} g) ∘C (F₁ {X} {Y} f))
+                 
+                 F[g∘f]⊆F[g]∘F[f] : pred-F[g∘f] ⊆ pred-F[g]∘F[f]  
+                 F[g∘f]⊆F[g]∘F[f] {((x₁ , x₂) , (z₁ , z₂))} ((y₁ , x₁y₁∈f₁ , y₁z₁∈g₁) , (y₂ , x₂y₂∈f₂ , y₂z₂∈g₂)) = p
+                   where
+                     p : ((x₁ , x₂) , (z₁ , z₂)) ∈ pred-F[g]∘F[f] 
+                     p = (y₁ , y₂) , (x₁y₁∈f₁ , x₂y₂∈f₂) , (y₁z₁∈g₁ , y₂z₂∈g₂)
 
-             -- I could make aliases for different partial applications of _∘_, 
-             -- or maybe a new notation with more arguments explicit:  C [ X - f - Y - g - Z ] 
-             --
-             -- But the provided shorthands seem much more readable for this. 
-             -- why is type inference failing here? Shouldn't we infer the correct arguments from f and g?
-             -- 
-             -- I could make my own version of this where X, Y, and Z are explicit. But I should ask about this
-             -- on reddit.
-             --
-             --
 
-             test : CohL'×CohL' [ X , Z ] 
-             test = CohL'×CohL' [ g ∘ f ] -- why can't we infer the arguments {X} {Y} {Z} here? 
+                 F[g]∘F[f]⊆F[g∘f] : pred-F[g]∘F[f] ⊆ pred-F[g∘f]  
+                 F[g]∘F[f]⊆F[g∘f] {((x₁ , x₂) , (z₁ , z₂))} ((y₁ , y₂) , (x₁y₁∈f₁ , x₂y₂∈f₂) , (y₁z₁∈g₁ , y₂z₂∈g₂)) = p
+                   where
+                     p : ((x₁ , x₂) , (z₁ , z₂)) ∈ pred-F[g∘f]
+                     p = (y₁ , x₁y₁∈f₁ , y₁z₁∈g₁) , (y₂ , x₂y₂∈f₂ , y₂z₂∈g₂)
+             --]]]
 
-             hom : CohL' [ (F₁ (Product CohL' CohL' [ g ∘ f ]))  ≈ CohL' [ F₁ g ∘ F₁ f ] ]
-             hom = {!!}
+           module _ {A B : Obj × Obj} {f g : Product CohL' CohL' [ A , B ]} where
+             
+             F-resp-≈ : (Product CohL' CohL' ∣ A ⇒ B [ f ≈ g ]) → (CohL' ∣ (F₀ A) ⇒ (F₀ B) [ (F₁ {A} {B} f) ≈ (F₁ {A} {B} g) ])
+             F-resp-≈ ((f₁⊆g₁ , g₁⊆f₁) , (f₂⊆g₂ , g₂⊆f₂)) = F[f]⊆F[g] , F[g]⊆F[f]
+               where
+                 F[f]⊆F[g] : proj₁ (F₁ {A} {B} f) ⊆ proj₁ (F₁ {A} {B} g)
+                 F[f]⊆F[g] {(a₁ , a₂) , (b₁ , b₂)} (a₁b₁∈f₁ , a₂b₂∈f₂) = f₁⊆g₁ a₁b₁∈f₁ , f₂⊆g₂ a₂b₂∈f₂ 
+
+                 F[g]⊆F[f] : proj₁ (F₁ {A} {B} g) ⊆ proj₁ (F₁ {A} {B} f)
+                 F[g]⊆F[f] {(a₁ , a₂) , (b₁ , b₂)} (a₁b₁∈g₁ , a₂b₂∈g₂) = g₁⊆f₁ a₁b₁∈g₁ , g₂⊆f₂ a₂b₂∈g₂
