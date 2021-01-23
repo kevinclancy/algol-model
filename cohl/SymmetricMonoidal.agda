@@ -318,8 +318,6 @@ SMCC-CohL {c} = record
              } 
          }
          where
- 
-
            ≈-trans : ∀ {x y z : |1|} → x ≈1 y → y ≈1 z → x ≈1 z
            ≈-trans {∗} {∗} {∗} refl₁ refl₂  = ∗≈∗
  
@@ -339,7 +337,7 @@ SMCC-CohL {c} = record
 
          unitorˡ : F₀ (unit , X) ≅CohL X
          unitorˡ = record
-           { from = from , from-isPoint , {!!}
+           { from = from , from-isPoint , from-resp-≈
            ; to = {!!}
            ; iso = {!!}
            }
@@ -374,11 +372,27 @@ SMCC-CohL {c} = record
 
                        a≈b : a ≈X b
                        a≈b = begin 
-                           a  ≈⟨ a≈a' ⟩
-                           a' ≈⟨ a'≈b' ⟩
-                           b' ≈⟨ ≈X-sym b≈b' ⟩
+                           a   ≈⟨ a≈a' ⟩
+                           a'  ≈⟨ a'≈b' ⟩
+                           b' ≈˘⟨ b≈b' ⟩
                            b
                          ∎
 
-                   q (inj₂ ¬a'∼b') = {!!}
-                   --F₀ (unit , X) ∼ 
+                   q (inj₂ ¬a'∼b') = inj₂ ¬∗a∼∗b
+                     where
+                       ¬∗a∼∗b : ¬ (∗ , a) ∼1⊗X (∗ , b)
+                       ¬∗a∼∗b (_ , a∼b) = ⊥-elim $ ¬a'∼b' (∼X-respʳ-≈X b≈b' a'∼b)
+                         where
+                           a'∼b : a' ∼X b
+                           a'∼b = ∼X-respˡ-≈X a≈a' a∼b
+
+               from-resp-≈ : from Respects (CoherentSpace._≈_ unit⊗X⇒X) 
+               from-resp-≈ {(∗ , a) , a' } {(∗ , b) , b'} ((_ , a≈b) , a'≈b') a≈a' = begin
+                   b ≈˘⟨ a≈b ⟩
+                   a  ≈⟨ a≈a' ⟩
+                   a' ≈⟨ a'≈b' ⟩
+                   b'
+                 ∎
+                 where
+                   import Relation.Binary.Reasoning.Setoid as SetR
+                   open SetR (CoherentSpace.setoid X)               
