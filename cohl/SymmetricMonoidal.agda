@@ -9,7 +9,9 @@ open import Data.Product
 open import Data.Sum hiding ([_,_])
 open import Data.Empty
 
-open import Relation.Binary
+open import Relation.Binary using 
+  (Rel ; _Respectsˡ_ ; Symmetric ; Transitive ; Reflexive ; IsEquivalence ; 
+   _Respects_)
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Relation.Unary
 open import Relation.Unary.Properties using (⊆-refl)
@@ -17,8 +19,8 @@ open import Relation.Nullary
 
 open import Categories.Category
 open import Categories.Category.Product
-open import Categories.Category.Monoidal.Core
-open import Categories.Category.Monoidal.Structure
+open import Categories.Category.Monoidal.Core using (Monoidal)
+open import Categories.Category.Monoidal.Structure using (SymmetricMonoidalCategory)
 open import Categories.Functor.Bifunctor
 
 open import CoherentSpace
@@ -32,23 +34,23 @@ C ∣ X ⇒ Y [ g ≈ f ] = (Category._≈_ C g f)
 
 
 
-SMCC-CohL : ∀ {c} {ℓ} → SymmetricMonoidalCategory _ _ _
-SMCC-CohL {c} {ℓ} = record
-  { U = CohL {c} {ℓ} 
+SMCC-CohL : ∀ {c} → SymmetricMonoidalCategory _ _ _
+SMCC-CohL {c} = record
+  { U = CohL {c} {c} 
   ; monoidal = monoidal
   ; symmetric = {!!}
   }
   where
     
-    CohL' = CohL {c} {ℓ}
-    open Category CohL' hiding (_≈_ ; id)
+    CohL' = CohL {c} {c}
+    open Category CohL' using (Obj)
     
 
     monoidal : Monoidal CohL'
     monoidal = record
       { ⊗ = ⊗
-      ; unit = {!!}
-      ; unitorˡ = {!!}
+      ; unit = unit
+      ; unitorˡ = unitorˡ
       ; unitorʳ = {!!}
       ; associator = {!!}
       ; unitorˡ-commute-from = {!!}
@@ -293,3 +295,90 @@ SMCC-CohL {c} {ℓ} = record
 
                  F[g]⊆F[f] : proj₁ (F₁ {A} {B} g) ⊆ proj₁ (F₁ {A} {B} f)
                  F[g]⊆F[f] {(a₁ , a₂) , (b₁ , b₂)} (a₁b₁∈g₁ , a₂b₂∈g₂) = g₁⊆f₁ a₁b₁∈g₁ , g₂⊆f₂ a₂b₂∈g₂
+
+       data |1| : Set c where
+         ∗ : |1|
+
+       data _≈1_ : |1| → |1| → Set c where
+         ∗≈∗ : ∗ ≈1 ∗
+
+       unit : Obj
+       unit = record 
+         { TokenSet = |1| 
+         ; _≈_ = _≈1_
+         ; _∼_ = _≈1_
+         ; ∼-respˡ-≈ = λ {x} {y} {y'} y≈y' x≈y → ≈-trans (≈-sym y≈y') x≈y
+         ; ≈→∼ = λ a≈b → a≈b
+         ; ∼-sym = ≈-sym
+         ; ∼-refl = ≈-refl
+         ; ≈-isEquivalence = record 
+             { refl = ≈-refl 
+             ; sym = ≈-sym
+             ; trans = ≈-trans 
+             } 
+         }
+         where
+ 
+
+           ≈-trans : ∀ {x y z : |1|} → x ≈1 y → y ≈1 z → x ≈1 z
+           ≈-trans {∗} {∗} {∗} refl₁ refl₂  = ∗≈∗
+ 
+           ≈-sym : ∀ {x y : |1|} → x ≈1 y → y ≈1 x
+           ≈-sym {∗} {∗} ∗≈∗ = ∗≈∗
+  
+           ≈-refl : ∀ {x : |1|} → x ≈1 x
+           ≈-refl {∗} = ∗≈∗ 
+
+       module _ {X : Obj} where
+         open import Categories.Morphism using (_≅_)
+         open import Categories.Functor using ()
+         open Categories.Functor.Functor ⊗
+         _≅CohL_ = _≅_ CohL'
+         _≈X_ = CoherentSpace._≈_ X
+         ≈X-sym = IsEquivalence.sym (CoherentSpace.≈-isEquivalence X)
+
+         unitorˡ : F₀ (unit , X) ≅CohL X
+         unitorˡ = record
+           { from = from , from-isPoint , {!!}
+           ; to = {!!}
+           ; iso = {!!}
+           }
+           where
+             module _ where
+               unit⊗X⇒X = (F₀ $ unit , X) ⇒ₗ X
+               TokenSet = CoherentSpace.TokenSet unit⊗X⇒X  
+               
+               _∼1⊗X_ = CoherentSpace._∼_ (F₀ $ unit , X)  
+               _≁1⊗X_ = CoherentSpace._≁_ (F₀ $ unit , X) 
+
+               _∼X_ = CoherentSpace._∼_ X
+               ∼X-respˡ-≈X = CoherentSpace.∼-respˡ-≈ X
+               ∼X-respʳ-≈X = CoherentSpace.∼-respʳ-≈ X
+
+               _≁X_ = CoherentSpace._≁_ X
+
+               from : Pred TokenSet c
+               from ((_ , x) , x') = x ≈X x'
+
+               from-isPoint : CoherentSpace.isPoint unit⊗X⇒X from
+               from-isPoint ((∗ , a) , a') ((∗ , b) , b') a≈a' b≈b' = p , q
+                 where
+                   p : (∗ , a) ∼1⊗X (∗ , b) → a' ∼X b'
+                   p (_ , a∼b) = ∼X-respˡ-≈X a≈a' (∼X-respʳ-≈X b≈b' a∼b)
+
+                   q : (a' ≁X b') → (∗ , a) ≁1⊗X (∗ , b)
+                   q (inj₁ a'≈b') = inj₁ (∗≈∗  , a≈b)
+                     where
+                       import Relation.Binary.Reasoning.Setoid as SetR
+                       open SetR (CoherentSpace.setoid X)
+
+                       a≈b : a ≈X b
+                       a≈b = begin 
+                           a  ≈⟨ a≈a' ⟩
+                           a' ≈⟨ a'≈b' ⟩
+                           b' ≈⟨ ≈X-sym b≈b' ⟩
+                           b
+                         ∎
+
+                   q (inj₂ ¬a'∼b') = {!!}
+                   --F₀ (unit , X) ∼ 
