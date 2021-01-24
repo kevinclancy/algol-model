@@ -45,7 +45,6 @@ SMCC-CohL {c} = record
     CohL' = CohL {c} {c}
     open Category CohL' using (Obj)
     
-
     monoidal : Monoidal CohL'
     monoidal = record
       { ⊗ = ⊗
@@ -338,61 +337,127 @@ SMCC-CohL {c} = record
          unitorˡ : F₀ (unit , X) ≅CohL X
          unitorˡ = record
            { from = from , from-isPoint , from-resp-≈
-           ; to = {!!}
-           ; iso = {!!}
+           ; to = to , to-isPoint , to-resp-≈
+           ; iso = iso
            }
            where
-             module _ where
-               unit⊗X⇒X = (F₀ $ unit , X) ⇒ₗ X
-               TokenSet = CoherentSpace.TokenSet unit⊗X⇒X  
-               
-               _∼1⊗X_ = CoherentSpace._∼_ (F₀ $ unit , X)  
-               _≁1⊗X_ = CoherentSpace._≁_ (F₀ $ unit , X) 
+             unit⊗X⇒X = F₀ (unit , X) ⇒ₗ X
+             X⇒unit⊗X = X ⇒ₗ F₀ (unit , X)
 
-               _∼X_ = CoherentSpace._∼_ X
-               ∼X-respˡ-≈X = CoherentSpace.∼-respˡ-≈ X
-               ∼X-respʳ-≈X = CoherentSpace.∼-respʳ-≈ X
+             _∼1⊗X_ = CoherentSpace._∼_ (F₀ $ unit , X)  
+             _≁1⊗X_ = CoherentSpace._≁_ (F₀ $ unit , X) 
 
-               _≁X_ = CoherentSpace._≁_ X
+             _∼X_ = CoherentSpace._∼_ X
+             ∼X-respˡ-≈X = CoherentSpace.∼-respˡ-≈ X
+             ∼X-respʳ-≈X = CoherentSpace.∼-respʳ-≈ X
 
-               from : Pred TokenSet c
-               from ((_ , x) , x') = x ≈X x'
+             _≁X_ = CoherentSpace._≁_ X
 
-               from-isPoint : CoherentSpace.isPoint unit⊗X⇒X from
-               from-isPoint ((∗ , a) , a') ((∗ , b) , b') a≈a' b≈b' = p , q
-                 where
-                   p : (∗ , a) ∼1⊗X (∗ , b) → a' ∼X b'
-                   p (_ , a∼b) = ∼X-respˡ-≈X a≈a' (∼X-respʳ-≈X b≈b' a∼b)
+             from : Pred (CoherentSpace.TokenSet unit⊗X⇒X) c
+             from ((_ , x) , x') = x ≈X x'
 
-                   q : (a' ≁X b') → (∗ , a) ≁1⊗X (∗ , b)
-                   q (inj₁ a'≈b') = inj₁ (∗≈∗  , a≈b)
-                     where
-                       import Relation.Binary.Reasoning.Setoid as SetR
-                       open SetR (CoherentSpace.setoid X)
+             from-isPoint : CoherentSpace.isPoint unit⊗X⇒X from
+             --[[[
+             from-isPoint ((∗ , a) , a') ((∗ , b) , b') a≈a' b≈b' = p , q
+               where
+                 p : (∗ , a) ∼1⊗X (∗ , b) → a' ∼X b'
+                 p (_ , a∼b) = ∼X-respˡ-≈X a≈a' (∼X-respʳ-≈X b≈b' a∼b)
 
-                       a≈b : a ≈X b
-                       a≈b = begin 
-                           a   ≈⟨ a≈a' ⟩
-                           a'  ≈⟨ a'≈b' ⟩
-                           b' ≈˘⟨ b≈b' ⟩
-                           b
-                         ∎
+                 q : (a' ≁X b') → (∗ , a) ≁1⊗X (∗ , b)
+                 q (inj₁ a'≈b') = inj₁ (∗≈∗  , a≈b)
+                   where
+                     import Relation.Binary.Reasoning.Setoid as SetR
+                     open SetR (CoherentSpace.setoid X)
+                     a≈b : a ≈X b
+                     a≈b = begin 
+                         a   ≈⟨ a≈a' ⟩
+                         a'  ≈⟨ a'≈b' ⟩
+                         b' ≈˘⟨ b≈b' ⟩
+                         b
+                       ∎
+                 q (inj₂ ¬a'∼b') = inj₂ ¬∗a∼∗b
+                   where
+                     ¬∗a∼∗b : ¬ (∗ , a) ∼1⊗X (∗ , b)
+                     ¬∗a∼∗b (_ , a∼b) = ⊥-elim $ ¬a'∼b' (∼X-respʳ-≈X b≈b' a'∼b)
+                       where
+                         a'∼b : a' ∼X b
+                         a'∼b = ∼X-respˡ-≈X a≈a' a∼b
+             --]]]
 
-                   q (inj₂ ¬a'∼b') = inj₂ ¬∗a∼∗b
-                     where
-                       ¬∗a∼∗b : ¬ (∗ , a) ∼1⊗X (∗ , b)
-                       ¬∗a∼∗b (_ , a∼b) = ⊥-elim $ ¬a'∼b' (∼X-respʳ-≈X b≈b' a'∼b)
-                         where
-                           a'∼b : a' ∼X b
-                           a'∼b = ∼X-respˡ-≈X a≈a' a∼b
+             from-resp-≈ : from Respects (CoherentSpace._≈_ unit⊗X⇒X) 
+             --[[[
+             from-resp-≈ {(∗ , a) , a' } {(∗ , b) , b'} ((_ , a≈b) , a'≈b') a≈a' = begin
+                 b ≈˘⟨ a≈b ⟩
+                 a  ≈⟨ a≈a' ⟩
+                 a' ≈⟨ a'≈b' ⟩
+                 b'
+               ∎
+               where
+                 import Relation.Binary.Reasoning.Setoid as SetR
+                 open SetR (CoherentSpace.setoid X)               
+             --]]]
 
-               from-resp-≈ : from Respects (CoherentSpace._≈_ unit⊗X⇒X) 
-               from-resp-≈ {(∗ , a) , a' } {(∗ , b) , b'} ((_ , a≈b) , a'≈b') a≈a' = begin
-                   b ≈˘⟨ a≈b ⟩
-                   a  ≈⟨ a≈a' ⟩
-                   a' ≈⟨ a'≈b' ⟩
-                   b'
-                 ∎
-                 where
-                   import Relation.Binary.Reasoning.Setoid as SetR
-                   open SetR (CoherentSpace.setoid X)               
+             to : Pred (CoherentSpace.TokenSet X⇒unit⊗X) c
+             to (x , (_ , x')) = x ≈X x'
+
+             to-isPoint : CoherentSpace.isPoint X⇒unit⊗X to
+             --[[[
+             to-isPoint (a , (∗ , a')) (b , (∗ , b')) a≈a' b≈b' = p , q
+               where
+                 p : a ∼X b → (∗ , a') ∼1⊗X (∗ , b')
+                 p a∼b = ∗≈∗ , ∼X-respʳ-≈X b≈b' a'∼b 
+                   where
+                     a'∼b : a' ∼X b
+                     a'∼b = ∼X-respˡ-≈X a≈a' a∼b
+
+                 q : (∗ , a') ≁1⊗X (∗ , b') → a ≁X b
+                 q (inj₁ (∗≈∗ , a'≈b')) = inj₁ r
+                   where
+                     import Relation.Binary.Reasoning.Setoid as SetR
+                     open SetR (CoherentSpace.setoid X)
+
+                     r : a ≈X b
+                     r = begin
+                         a   ≈⟨ a≈a' ⟩
+                         a'  ≈⟨ a'≈b' ⟩
+                         b' ≈˘⟨ b≈b' ⟩
+                         b
+                       ∎ 
+                 q (inj₂ ¬∗a'∼∗b') = inj₂ ¬a∼b
+                   where
+                     import Relation.Binary.Reasoning.Setoid as SetR
+                     open SetR (CoherentSpace.setoid X)
+
+                     ¬a∼b : ¬ (a ∼X b)
+                     ¬a∼b a∼b = ¬∗a'∼∗b' (∗≈∗ , a'∼b')
+                       where
+                         a'∼b : a' ∼X b
+                         a'∼b = ∼X-respˡ-≈X a≈a' a∼b
+
+                         a'∼b' : a' ∼X b'
+                         a'∼b' = ∼X-respʳ-≈X b≈b' a'∼b
+             --]]]
+
+             to-resp-≈ : to Respects (CoherentSpace._≈_ X⇒unit⊗X) 
+             --[[[
+             to-resp-≈ {(a , (∗ , a'))} {(b , (∗ , b'))} (a≈b , (∗≈∗ , a'≈b')) a≈a' = b≈b'
+               where
+                 import Relation.Binary.Reasoning.Setoid as SetR
+                 open SetR (CoherentSpace.setoid X)
+
+                 b≈b' : b ≈X b'
+                 b≈b' = begin
+                     b ≈˘⟨ a≈b ⟩
+                     a  ≈⟨ a≈a' ⟩ 
+                     a' ≈⟨ a'≈b' ⟩
+                     b'
+                   ∎
+             --]]]
+
+             unit⊗X≅X = Categories.Morphism.Iso CohL' {F₀ (unit , X)} {X} 
+
+             iso : unit⊗X≅X (from , from-isPoint , from-resp-≈) (to , to-isPoint , to-resp-≈)
+             iso = record 
+               { isoˡ = {!!} 
+               ; isoʳ = {!!}
+               }
