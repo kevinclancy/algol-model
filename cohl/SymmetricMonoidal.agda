@@ -330,7 +330,7 @@ SMCC-CohL {c} = record
 
        module _ {X : Obj} where
          open import Categories.Morphism using (_≅_)
-         open import Categories.Functor using ()
+         import Categories.Functor
          open Categories.Functor.Functor ⊗
          _≅CohL_ = _≅_ CohL'
          _≈X_ = CoherentSpace._≈_ X
@@ -360,6 +360,7 @@ SMCC-CohL {c} = record
 
              from-isPoint : CoherentSpace.isPoint unit⊗X⇒X from
              --[[[
+
              from-isPoint ((∗ , a) , a') ((∗ , b) , b') a≈a' b≈b' = p , q
                where
                  p : (∗ , a) ∼1⊗X (∗ , b) → a' ∼X b'
@@ -384,6 +385,7 @@ SMCC-CohL {c} = record
                        where
                          a'∼b : a' ∼X b
                          a'∼b = ∼X-respˡ-≈X a≈a' a∼b
+
              --]]]
 
              from-resp-≈ : from Respects (CoherentSpace._≈_ unit⊗X⇒X) 
@@ -458,8 +460,53 @@ SMCC-CohL {c} = record
 
              unit⊗X≅X = Categories.Morphism.Iso CohL' {F₀ (unit , X)} {X} 
 
-             iso : unit⊗X≅X (from , from-isPoint , from-resp-≈) (to , to-isPoint , to-resp-≈)
+             to-⇒ : CohL' [ X , (F₀ $ unit , X) ]
+             to-⇒ = to , to-isPoint , to-resp-≈
+
+             from-⇒ : CohL' [ (F₀ $ unit , X) , X ]             
+             from-⇒ = from , from-isPoint , from-resp-≈
+
+             iso : unit⊗X≅X from-⇒ to-⇒
              iso = record 
-               { isoˡ = {!!} 
-               ; isoʳ = {!!}
+               { isoˡ = isoˡ 
+               ; isoʳ = isoʳ
                }
+               where
+                 _≈1⊗X⇒1⊗X_ = Category._≈_ CohL' {F₀ (unit , X)} {F₀ (unit , X)}
+                 _≈X⇒X_ = Category._≈_ CohL' {X} {X}
+               
+                 _∘₁_ = CohL' ∣ X ⇒ F₀ (unit , X) ⇒ X [_∘_]
+                 _∘₂_ = CohL' ∣ F₀ (unit , X) ⇒ X ⇒ F₀ (unit , X) [_∘_]
+
+                 f-⇒ = from-⇒ ∘₁ to-⇒
+                 g-⇒ = to-⇒ ∘₂ from-⇒
+                 idX-⇒ = Category.id CohL' {X}
+                 id1⊗X-⇒ = Category.id CohL' {F₀ (unit , X)}
+
+                 isoˡ : g-⇒ ≈1⊗X⇒1⊗X id1⊗X-⇒
+                 isoˡ = g⊆id , id⊆g
+                   where
+                     g = proj₁ g-⇒
+                     id = proj₁ id1⊗X-⇒
+
+                     open IsEquivalence (CoherentSpace.≈-isEquivalence X)
+
+                     g⊆id : g ⊆ id
+                     g⊆id {(∗ , x) , (∗ , x')} (y , x≈y , y≈x') = ∗≈∗ , trans x≈y y≈x'
+
+                     id⊆g : id ⊆ g
+                     id⊆g {(∗ , x) , (∗ , x')} (∗≈∗ , x≈x') = x , refl , x≈x'
+
+                 isoʳ : f-⇒ ≈X⇒X idX-⇒
+                 isoʳ = f⊆id , id⊆f
+                   where
+                     f = proj₁ f-⇒
+                     id = proj₁ idX-⇒
+
+                     open IsEquivalence (CoherentSpace.≈-isEquivalence X)
+
+                     f⊆id : f ⊆ id
+                     f⊆id {x , x'} ((∗ , y) , x≈y , y≈x') = trans x≈y y≈x'
+
+                     id⊆f : id ⊆ f
+                     id⊆f {x , x'} x≈x' = (∗ , x) , refl , x≈x'
