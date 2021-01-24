@@ -163,6 +163,7 @@ SMCC-CohL {c} = record
            F₁ {A , B} {C , D} ((f , f-isPoint , f-Respects-≈A⊗C) , (g , g-isPoint , g-Respects-≈B⊗D)) = f⊗g 
              where
                --[[[
+
                A⊗B⇒ₗC⊗D : CoherentSpace _ _ 
                A⊗B⇒ₗC⊗D = ((F₀ $ A , B) ⇒ₗ (F₀ $ C , D))
                
@@ -229,18 +230,19 @@ SMCC-CohL {c} = record
                        cd≁c'd'→ab≁a'b' (inj₁ (c≈c' , d≈d')) | inj₁ a≈a' | inj₂ ¬b∼b' = inj₂ ¬ab∼a'b'
                          where
                            ¬ab∼a'b' : ¬ (a , b) ∼A⊗B (a' , b')
-                           ¬ab∼a'b' (a∼a' , b∼b') = ⊥-elim $ ¬b∼b' b∼b'
+                           ¬ab∼a'b' (a∼a' , b∼b') = ¬b∼b' b∼b'
                        cd≁c'd'→ab≁a'b' (inj₁ (c≈c' , d≈d')) | inj₂ ¬a∼a' | b≁b' = inj₂ ¬ab∼a'b'
                          where
                            ¬ab∼a'b' : ¬ (a , b) ∼A⊗B (a' , b')
-                           ¬ab∼a'b' (a∼a' , b∼b') = ⊥-elim $ ¬a∼a' a∼a'                           
+                           ¬ab∼a'b' (a∼a' , b∼b') = ¬a∼a' a∼a'                           
                        cd≁c'd'→ab≁a'b' (inj₂ ¬cd∼c'd') = inj₂ ¬ab∼a'b'
                          where
                            ¬ab∼a'b' : ¬ (a , b) ∼A⊗B (a' , b')
-                           ¬ab∼a'b' (a∼a' , b∼b') = ⊥-elim $ ¬cd∼c'd' (a∼a'→c∼c' a∼a' , b∼b'→d∼d' b∼b') 
+                           ¬ab∼a'b' (a∼a' , b∼b') = ¬cd∼c'd' (a∼a'→c∼c' a∼a' , b∼b'→d∼d' b∼b') 
 
                    P-Respects-≈ : P Respects _≈_  
                    P-Respects-≈ ((a , b) , (c , d)) (ac∈f , bd∈g) = f-Respects-≈A⊗C (a , c) ac∈f , g-Respects-≈B⊗D (b , d) bd∈g
+
                --]]]
 
            identity : {(A , B) : Obj × Obj} → _[_≈_] CohL' {F₀ $ A , B} {F₀ $ A , B} (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL') {A , B})) (Category.id CohL' {F₀ $ A , B})
@@ -378,7 +380,7 @@ SMCC-CohL {c} = record
                  q (inj₂ ¬a'∼b') = inj₂ ¬∗a∼∗b
                    where
                      ¬∗a∼∗b : ¬ (∗ , a) ∼1⊗X (∗ , b)
-                     ¬∗a∼∗b (_ , a∼b) = ⊥-elim $ ¬a'∼b' (∼X-respʳ-≈X b≈b' a'∼b)
+                     ¬∗a∼∗b (_ , a∼b) = ¬a'∼b' (∼X-respʳ-≈X b≈b' a'∼b)
                        where
                          a'∼b : a' ∼X b
                          a'∼b = ∼X-respˡ-≈X a≈a' a∼b
