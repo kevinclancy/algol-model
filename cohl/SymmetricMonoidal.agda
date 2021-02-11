@@ -62,13 +62,17 @@ SMCC-CohL {c} = record
           X⊗[Y⊗Z] = (F₀ (X , F₀ (Y , Z)))
 
           _≈X_ = CoherentSpace._≈_ X
+          _∼X_ = CoherentSpace._∼_ X
           ∼X-respˡ-≈X = CoherentSpace.∼-respˡ-≈ X
           ∼X-respʳ-≈X = CoherentSpace.∼-respʳ-≈ X
-          _∼X_ = CoherentSpace._∼_ X
           _≈Y_ = CoherentSpace._≈_ Y
           _∼Y_ = CoherentSpace._∼_ Y
+          ∼Y-respˡ-≈Y = CoherentSpace.∼-respˡ-≈ Y
+          ∼Y-respʳ-≈Y = CoherentSpace.∼-respʳ-≈ Y
           _≈Z_ = CoherentSpace._≈_ Z
           _∼Z_ = CoherentSpace._∼_ Z
+          ∼Z-respˡ-≈Z = CoherentSpace.∼-respˡ-≈ Z
+          ∼Z-respʳ-≈Z = CoherentSpace.∼-respʳ-≈ Z
 
           from : CoherentSpace.Point ([X⊗Y]⊗Z ⇒ₗ X⊗[Y⊗Z]) 
           from = f , f-isPoint , {!!}
@@ -82,13 +86,13 @@ SMCC-CohL {c} = record
                 where
                   _∼_ = CoherentSpace._∼_ ([X⊗Y]⊗Z ⇒ₗ X⊗[Y⊗Z])
                   _∼[XY]Z_ = CoherentSpace._∼_ [X⊗Y]⊗Z
-                  _∼X[YZ]_ = CoherentSpace._∼_ X⊗[Y⊗Z] 
-
-                  [xy]z = ((x , y) , z)
-
-                  [xy]z∼[ab]c→[x'y']z'∼[a'b']c' : ((x , y) , z) ∼[XY]Z ((a , b) , c) → 
+                  _≁[XY]Z_ = CoherentSpace._≁_ [X⊗Y]⊗Z
+                  _∼X[YZ]_ = CoherentSpace._∼_ X⊗[Y⊗Z]
+                  _≁X[YZ]_ = CoherentSpace._≁_ X⊗[Y⊗Z]
+                              
+                  [xy]z∼[ab]c→x'[y'z']∼a'[b'c'] : ((x , y) , z) ∼[XY]Z ((a , b) , c) → 
                                                   (x' , (y' , z')) ∼X[YZ] (a' , (b' , c'))
-                  [xy]z∼[ab]c→[x'y']z'∼[a'b']c' ((x∼a , y∼b) , z∼c) = x'∼a' , ({!!} , {!!})
+                  [xy]z∼[ab]c→x'[y'z']∼a'[b'c'] ((x∼a , y∼b) , z∼c) = x'∼a' , (y'∼b' , z'∼c')
                     where
                       x'∼a' : x' ∼X a'
                       x'∼a' = ∼X-respʳ-≈X a≈a' x'∼a
@@ -96,9 +100,59 @@ SMCC-CohL {c} = record
                           x'∼a : x' ∼X a
                           x'∼a = ∼X-respˡ-≈X x≈x' x∼a
 
+                      y'∼b' : y' ∼Y b'
+                      y'∼b' = ∼Y-respʳ-≈Y b≈b' y'∼b
+                        where
+                          y'∼b : y' ∼Y b
+                          y'∼b = ∼Y-respˡ-≈Y y≈y' y∼b
+
+                      z'∼c' : z' ∼Z c'
+                      z'∼c' = ∼Z-respʳ-≈Z c≈c' z'∼c
+                        where
+                          z'∼c : z' ∼Z c
+                          z'∼c = ∼Z-respˡ-≈Z z≈z' z∼c
+
+                  x'[y'z']≁a'[b'c']→[xy]z≁[ab]c : (x' , (y' , z')) ≁X[YZ] (a' , (b' , c')) → 
+                                                  ((x , y) , z) ≁[XY]Z ((a , b) , c)
+                  x'[y'z']≁a'[b'c']→[xy]z≁[ab]c (inj₁ (x'≈a' , (y'≈b' , z'≈c'))) = inj₁ ((x≈a , y≈b) , z≈c)
+                    where
+                      x≈a : x ≈X a
+                      x≈a = begin
+                          x   ≈⟨ x≈x' ⟩
+                          x'  ≈⟨ x'≈a'  ⟩
+                          a'  ≈˘⟨ a≈a' ⟩
+                          a
+                        ∎
+                        where
+                          import Relation.Binary.Reasoning.Setoid as SetR
+                          open SetR (CoherentSpace.setoid X)
+
+                      y≈b : y ≈Y b
+                      y≈b = begin
+                          y   ≈⟨ y≈y'  ⟩
+                          y'  ≈⟨ y'≈b' ⟩
+                          b' ≈˘⟨ b≈b'  ⟩
+                          b
+                        ∎
+                        where
+                          import Relation.Binary.Reasoning.Setoid as SetR
+                          open SetR (CoherentSpace.setoid Y)                      
+
+                      z≈c : z ≈Z c
+                      z≈c = begin
+                          z   ≈⟨ z≈z'  ⟩
+                          z'  ≈⟨ z'≈c' ⟩
+                          c' ≈˘⟨ c≈c'  ⟩
+                          c
+                        ∎
+                        where
+                          import Relation.Binary.Reasoning.Setoid as SetR
+                          open SetR (CoherentSpace.setoid Z)    
+
+                  x'[y'z']≁a'[b'c']→[xy]z≁[ab]c (inj₂ y) = {!!}
 
                   sim : (((x , y) , z) , (x' , (y' , z'))) ∼ (((a , b) , c) , (a' , (b' , c')))
-                  sim = [xy]z∼[ab]c→[x'y']z'∼[a'b']c' , {!!}
+                  sim = [xy]z∼[ab]c→x'[y'z']∼a'[b'c'] , {!x'[y'z']≁a'[b'c']→[xy]z≁[ab]c!}
                   
                   
           to : CoherentSpace.Point (X⊗[Y⊗Z] ⇒ₗ [X⊗Y]⊗Z)
