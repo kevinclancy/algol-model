@@ -53,7 +53,7 @@ SMCC-CohL {c} = record
       ; unitorʳ-commute-from = λ {X} {Y} {f} → unitorʳ-commute-from {X} {Y} {f}
       ; unitorʳ-commute-to = λ {X} {Y} {f} → unitorʳ-commute-to {X} {Y} {f}
       ; assoc-commute-from = λ {X₁} {Y₁} {f} {X₂} {Y₂} {g} {X₃} {Y₃} {h} → assoc-commute-from {X₁} {Y₁} {f} {X₂} {Y₂} {g} {X₃} {Y₃} {h} 
-      ; assoc-commute-to = {!!}
+      ; assoc-commute-to = {!λ {X₁} {Y₁} {f} {X₂} {Y₂} {g} {X₃} {Y₃} {h} → assoc-commute-to {X₁} {Y₁} {f} {X₂} {Y₂} {g} {X₃} {Y₃} {h}!}
       ; triangle = {!!}
       ; pentagon = {!!}
       }
