@@ -422,6 +422,9 @@ module _ {X : Obj} {Y : Obj} {f : X ⇒ Y} where
     1⊗X≅X = unitorˡ {X} 
     1⊗Y≅Y = unitorˡ {Y}
 
+    X⊗1≅X = unitorʳ {X}
+    Y⊗1≅Y = unitorʳ {Y}
+
   module _ where
     private
       1⊗X⇒X = _≅_.from 1⊗X≅X 
@@ -477,3 +480,57 @@ module _ {X : Obj} {Y : Obj} {f : X ⇒ Y} where
             xy∈f : (x , y) ∈ proj₁ f
             xy∈f = f-resp-≈X⇒Y (≈X-sym x≈x' , ≈Y-refl) x'y∈f
           
+  module _ where
+    private
+      X⊗1⇒X = _≅_.from X⊗1≅X 
+      Y⊗1⇒Y = _≅_.from Y⊗1≅Y
+  
+      bottomLeft : F₀ (X , unit) ⇒ Y
+      bottomLeft = ∣ F₀ (X , unit) ⇒ F₀ (Y , unit) ⇒ Y [ Y⊗1⇒Y ∘ (F₁ {X , unit} {Y , unit} (f , id {unit})) ]
+    
+      topRight : F₀ (X , unit) ⇒ Y
+      topRight = ∣ F₀ (X , unit) ⇒ X ⇒ Y [ f ∘ X⊗1⇒X  ]
+
+    unitorʳ-commute-from : ∣ F₀ (X , unit) ⇒ Y [ bottomLeft ≈ topRight ] 
+    unitorʳ-commute-from = bl⊆tr , tr⊆bl
+      where
+        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
+        bl⊆tr {(x , ∗) , y} ((y' , ∗) , (xy'∈f , ∗≈∗) , y'≈y) = x , ≈X-refl , f-resp-≈X⇒Y xy'≈xy xy'∈f 
+          where
+            xy'≈xy : (x , y') ≈X⇒Y (x , y)
+            xy'≈xy = ≈X-refl , y'≈y
+
+        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl {(x , ∗) , y} (x' , x≈x' , x'y∈f) = (y , ∗) , (xy∈f , ∗≈∗) , ≈Y-refl
+          where 
+            x'y≈xy : (x' , y) ≈X⇒Y (x , y) 
+            x'y≈xy = (≈X-sym x≈x' , ≈Y-refl)
+
+            xy∈f : (x , y) ∈ (proj₁ f)
+            xy∈f = f-resp-≈X⇒Y x'y≈xy x'y∈f
+
+  module _ where
+    private
+      X⇒X⊗1 = _≅_.to X⊗1≅X 
+      Y⇒Y⊗1 = _≅_.to Y⊗1≅Y
+
+      bottomLeft : X ⇒ F₀ (Y , unit)
+      bottomLeft = ∣ X ⇒ Y ⇒ F₀ (Y , unit) [ Y⇒Y⊗1 ∘ f ]
+
+      topRight : X ⇒ F₀ (Y , unit)
+      topRight = ∣ X ⇒ F₀ (X , unit) ⇒ F₀ (Y , unit) [ F₁ {X , unit} {Y , unit} (f , id {unit}) ∘ X⇒X⊗1 ] 
+
+    unitorʳ-commute-to : ∣ X ⇒ F₀ (Y , unit) [ bottomLeft ≈ topRight ]
+    unitorʳ-commute-to = bl⊆tr , tr⊆bl
+      where
+        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
+        bl⊆tr {x , (y , ∗)} (y' , xy'∈f , y'≈y) = (x , ∗) , ≈X-refl , (xy∈f , ∗≈∗)
+          where
+            xy∈f : (x , y) ∈ proj₁ f
+            xy∈f = f-resp-≈X⇒Y (≈X-refl , y'≈y) xy'∈f
+
+        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl {x , (y , ∗)} ((x' , ∗) , x≈x' , (x'y∈f , ∗≈∗)) = y , xy∈f , ≈Y-refl
+          where
+            xy∈f : (x , y) ∈ proj₁ f
+            xy∈f = f-resp-≈X⇒Y (≈X-sym x≈x' , ≈Y-refl) x'y∈f
