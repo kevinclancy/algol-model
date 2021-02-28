@@ -6,7 +6,7 @@ open import Tensor {c}
 open import Data.Product
 open import Data.Sum hiding ([_,_])
 open import Function using (_$_)
-open import Relation.Unary
+open import Relation.Unary using (Pred ; _⊆_ ; _∈_)
 open import Relation.Binary using 
   (IsEquivalence; _Respects_)
 open import Relation.Nullary using (¬_)
@@ -14,31 +14,34 @@ open import Relation.Nullary using (¬_)
 open import Categories.Category
 
 open import CoherentSpace
+open import Level
 
 private
+  open import Categories.Morphism using (_≅_)
+
   CohL' = CohL {c} {c}
-  open Category CohL' using (Obj)
+  open Category CohL' using (Obj ; _⇒_ ; id)
 
-  _∣_⇒_⇒_[_∘_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y Z : Category.Obj C) → (g : C [ Y , Z ]) → (f : C [ X , Y ]) → C [ X , Z ]
-  C ∣ X ⇒ Y ⇒ Z [ g ∘ f ] = (Category._∘_ C g f) 
+  ∣_⇒_⇒_[_∘_] : (X Y Z : Category.Obj CohL') → (g : CohL' [ Y , Z ]) → (f : CohL' [ X , Y ]) → CohL' [ X , Z ]
+  ∣ X ⇒ Y ⇒ Z [ g ∘ f ] = (Category._∘_ CohL' {X} {Y} {Z} g f) 
 
-  _∣_⇒_[_≈_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y : Category.Obj C) → (g : C [ X , Y ]) → (f : C [ X , Y ]) → Set _
-  C ∣ X ⇒ Y [ g ≈ f ] = (Category._≈_ C g f) 
+  ∣_⇒_[_≈_] : (X Y : Category.Obj CohL') → (g : CohL' [ X , Y ]) → (f : CohL' [ X , Y ]) → Set _
+  ∣ X ⇒ Y [ g ≈ f ] = (Category._≈_ CohL' {X} {Y} g f) 
 
-data |1| : Set c where
-  ∗ : |1|
+  data |1| : Set c where
+    ∗ : |1|
 
-data _≈1_ : |1| → |1| → Set c where
-  ∗≈∗ : ∗ ≈1 ∗
+  data _≈1_ : |1| → |1| → Set c where
+    ∗≈∗ : ∗ ≈1 ∗
 
-≈-trans : ∀ {x y z : |1|} → x ≈1 y → y ≈1 z → x ≈1 z
-≈-trans {∗} {∗} {∗} refl₁ refl₂  = ∗≈∗
+  ≈-trans : ∀ {x y z : |1|} → x ≈1 y → y ≈1 z → x ≈1 z
+  ≈-trans {∗} {∗} {∗} refl₁ refl₂  = ∗≈∗
 
-≈-sym : ∀ {x y : |1|} → x ≈1 y → y ≈1 x
-≈-sym {∗} {∗} ∗≈∗ = ∗≈∗
+  ≈-sym : ∀ {x y : |1|} → x ≈1 y → y ≈1 x
+  ≈-sym {∗} {∗} ∗≈∗ = ∗≈∗
 
-≈-refl : ∀ {x : |1|} → x ≈1 x
-≈-refl {∗} = ∗≈∗ 
+  ≈-refl : ∀ {x : |1|} → x ≈1 x
+  ≈-refl {∗} = ∗≈∗ 
 
 unit : Obj
 unit = record 
@@ -57,15 +60,17 @@ unit = record
   }
 
 module _ {X : Obj} where
-  open import Categories.Morphism using (_≅_)
-  _≅CohL_ = _≅_ CohL'
-  _≈X_ = CoherentSpace._≈_ X
-  ≈X-sym = IsEquivalence.sym (CoherentSpace.≈-isEquivalence X)
+  
 
-  _∼X_ = CoherentSpace._∼_ X
-  _≁X_ = CoherentSpace._≁_ X
-  ∼X-respˡ-≈X = CoherentSpace.∼-respˡ-≈ X
-  ∼X-respʳ-≈X = CoherentSpace.∼-respʳ-≈ X
+  private
+    _≅CohL_ = _≅_ CohL'
+    _≈X_ = CoherentSpace._≈_ X
+    ≈X-sym = IsEquivalence.sym (CoherentSpace.≈-isEquivalence X)
+
+    _∼X_ = CoherentSpace._∼_ X
+    _≁X_ = CoherentSpace._≁_ X
+    ∼X-respˡ-≈X = CoherentSpace.∼-respˡ-≈ X
+    ∼X-respʳ-≈X = CoherentSpace.∼-respʳ-≈ X
 
   unitorˡ : F₀ (unit , X) ≅CohL X
   unitorˡ = record
@@ -200,8 +205,8 @@ module _ {X : Obj} where
           _≈1⊗X⇒1⊗X_ = Category._≈_ CohL' {F₀ (unit , X)} {F₀ (unit , X)}
           _≈X⇒X_ = Category._≈_ CohL' {X} {X}
 
-          _∘₁_ = CohL' ∣ X ⇒ F₀ (unit , X) ⇒ X [_∘_]
-          _∘₂_ = CohL' ∣ F₀ (unit , X) ⇒ X ⇒ F₀ (unit , X) [_∘_]
+          _∘₁_ = ∣ X ⇒ F₀ (unit , X) ⇒ X [_∘_]
+          _∘₂_ = ∣ F₀ (unit , X) ⇒ X ⇒ F₀ (unit , X) [_∘_]
 
           f-⇒ = from-⇒ ∘₁ to-⇒
           g-⇒ = to-⇒ ∘₂ from-⇒
@@ -211,29 +216,29 @@ module _ {X : Obj} where
           isoˡ : g-⇒ ≈1⊗X⇒1⊗X id1⊗X-⇒
           isoˡ = g⊆id , id⊆g
             where
-              g = proj₁ g-⇒
-              id = proj₁ id1⊗X-⇒
+              g₁ = proj₁ g-⇒
+              id₁ = proj₁ id1⊗X-⇒
 
               open IsEquivalence (CoherentSpace.≈-isEquivalence X)
 
-              g⊆id : g ⊆ id
+              g⊆id : g₁ ⊆ id₁
               g⊆id {(∗ , x) , (∗ , x')} (y , x≈y , y≈x') = ∗≈∗ , trans x≈y y≈x'
 
-              id⊆g : id ⊆ g
+              id⊆g : id₁ ⊆ g₁
               id⊆g {(∗ , x) , (∗ , x')} (∗≈∗ , x≈x') = x , refl , x≈x'
 
           isoʳ : f-⇒ ≈X⇒X idX-⇒
           isoʳ = f⊆id , id⊆f
             where
-              f = proj₁ f-⇒
-              id = proj₁ idX-⇒
+              f₁ = proj₁ f-⇒
+              id₁ = proj₁ idX-⇒
 
               open IsEquivalence (CoherentSpace.≈-isEquivalence X)
 
-              f⊆id : f ⊆ id
+              f⊆id : f₁ ⊆ id₁
               f⊆id {x , x'} ((∗ , y) , x≈y , y≈x') = trans x≈y y≈x'
 
-              id⊆f : id ⊆ f
+              id⊆f : id₁ ⊆ f₁
               id⊆f {x , x'} x≈x' = (∗ , x) , refl , x≈x'
       --]]]
 
@@ -368,38 +373,107 @@ module _ {X : Obj} where
           _≈X⊗1⇒X⊗1_ = Category._≈_ CohL' {F₀ (X , unit)} {F₀ (X , unit)}
           _≈X⇒X_ = Category._≈_ CohL' {X} {X}
 
-          _∘₁_ = CohL' ∣ X ⇒ F₀ (X , unit) ⇒ X [_∘_]
-          _∘₂_ = CohL' ∣ F₀ (X , unit) ⇒ X ⇒ F₀ (X , unit) [_∘_]
+          _∘₁_ = ∣ X ⇒ F₀ (X , unit) ⇒ X [_∘_]
+          _∘₂_ = ∣ F₀ (X , unit) ⇒ X ⇒ F₀ (X , unit) [_∘_]
 
           f-⇒ = from-⇒ ∘₁ to-⇒
           g-⇒ = to-⇒ ∘₂ from-⇒
-          idX-⇒ = Category.id CohL' {X}
-          idX⊗1-⇒ = Category.id CohL' {F₀ (X , unit)}
+          idX-⇒ = id {X}
+          idX⊗1-⇒ = id {F₀ (X , unit)}
 
           isoˡ : g-⇒ ≈X⊗1⇒X⊗1 idX⊗1-⇒
           isoˡ = g⊆id , id⊆g
             where
-              g = proj₁ g-⇒
-              id = proj₁ idX⊗1-⇒
+              g₁ = proj₁ g-⇒
+              id₁ = proj₁ idX⊗1-⇒
 
               open IsEquivalence (CoherentSpace.≈-isEquivalence X)
         
-              g⊆id : g ⊆ id
+              g⊆id : g₁ ⊆ id₁
               g⊆id {(x , ∗) , (x' , ∗)} (y , x≈y , y≈x') = trans x≈y y≈x' , ∗≈∗
   
-              id⊆g : id ⊆ g
+              id⊆g : id₁ ⊆ g₁
               id⊆g {(x , ∗) , (x' , ∗)} (x≈x' , ∗≈∗) = x , refl , x≈x'
 
           isoʳ : f-⇒ ≈X⇒X idX-⇒
           isoʳ = f⊆id , id⊆f
             where
-              f = proj₁ f-⇒
-              id = proj₁ idX-⇒
+              f₁ = proj₁ f-⇒
+              id₁ = proj₁ idX-⇒
 
               open IsEquivalence (CoherentSpace.≈-isEquivalence X)
 
-              f⊆id : f ⊆ id
+              f⊆id : f₁ ⊆ id₁
               f⊆id {x , x'} ((y , ∗) , x≈y , y≈x') = trans x≈y y≈x'
 
-              id⊆f : id ⊆ f
+              id⊆f : id₁ ⊆ f₁
               id⊆f {x , x'} x≈x' = (x , ∗) , refl , x≈x'
+
+module _ {X : Obj} {Y : Obj} {f : X ⇒ Y} where
+  private
+    _≈X⇒Y_ = CoherentSpace._≈_ (X ⇒ₗ Y)
+    ≈X-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence X)
+    ≈X-sym  = IsEquivalence.sym (CoherentSpace.≈-isEquivalence X)
+    ≈Y-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence Y)
+
+    f-resp-≈X⇒Y : (proj₁ f) Respects _≈X⇒Y_
+    f-resp-≈X⇒Y = proj₂ $ proj₂ f
+ 
+    1⊗X≅X = unitorˡ {X} 
+    1⊗Y≅Y = unitorˡ {Y}
+
+  module _ where
+    private
+      1⊗X⇒X = _≅_.from 1⊗X≅X 
+      1⊗Y⇒Y = _≅_.from 1⊗Y≅Y
+  
+      bottomLeft : F₀ (unit , X) ⇒ Y
+      bottomLeft = ∣ F₀ (unit , X) ⇒ F₀ (unit , Y) ⇒ Y [ 1⊗Y⇒Y ∘ (F₁ {unit , X} {unit , Y} (id {unit} , f)) ]
+    
+      topRight : F₀ (unit , X) ⇒ Y
+      topRight = ∣ F₀ (unit , X) ⇒ X ⇒ Y [ f ∘ 1⊗X⇒X  ]
+
+    unitorˡ-commute-from : ∣ F₀ (unit , X) ⇒ Y [ bottomLeft ≈ topRight ] 
+    unitorˡ-commute-from = bl⊆tr , tr⊆bl
+      where
+        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
+        bl⊆tr {(∗ , x) , y} ((∗ , y') , (∗≈∗ , xy'∈f) , y'≈y) = x , ≈X-refl , f-resp-≈X⇒Y xy'≈xy xy'∈f 
+          where
+            xy'≈xy : (x , y') ≈X⇒Y (x , y)
+            xy'≈xy = ≈X-refl , y'≈y
+
+        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl {(∗ , x) , y} (x' , x≈x' , x'y∈f) = (∗ , y) , (∗≈∗ , xy∈f) , ≈Y-refl
+          where 
+            x'y≈xy : (x' , y) ≈X⇒Y (x , y) 
+            x'y≈xy = (≈X-sym x≈x' , ≈Y-refl)
+
+            xy∈f : (x , y) ∈ (proj₁ f)
+            xy∈f = f-resp-≈X⇒Y x'y≈xy x'y∈f
+
+  module _ where
+    private
+      X⇒1⊗X = _≅_.to 1⊗X≅X 
+      Y⇒1⊗Y = _≅_.to 1⊗Y≅Y
+
+      bottomLeft : X ⇒ F₀ (unit , Y)
+      bottomLeft = ∣ X ⇒ Y ⇒ F₀ (unit , Y) [ Y⇒1⊗Y ∘ f ]
+
+      topRight : X ⇒ F₀ (unit , Y)
+      topRight = ∣ X ⇒ F₀ (unit , X) ⇒ F₀ (unit , Y) [ F₁ {unit , X} {unit , Y} (id {unit} , f) ∘ X⇒1⊗X ] 
+
+    unitorˡ-commute-to : ∣ X ⇒ F₀ (unit , Y) [ bottomLeft ≈ topRight ]
+    unitorˡ-commute-to = bl⊆tr , tr⊆bl
+      where
+        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
+        bl⊆tr {x , (∗ , y)} (y' , xy'∈f , y'≈y) = (∗ , x) , ≈X-refl , (∗≈∗ , xy∈f)
+          where
+            xy∈f : (x , y) ∈ proj₁ f
+            xy∈f = f-resp-≈X⇒Y (≈X-refl , y'≈y) xy'∈f
+
+        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl {x , (∗ , y)} ((∗ , x') , x≈x' , (∗≈∗ , x'y∈f)) = y , xy∈f , ≈Y-refl
+          where
+            xy∈f : (x , y) ∈ proj₁ f
+            xy∈f = f-resp-≈X⇒Y (≈X-sym x≈x' , ≈Y-refl) x'y∈f
+          
