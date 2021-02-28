@@ -8,18 +8,20 @@ open import Relation.Binary using
   (Rel ; _Respectsˡ_ ; Symmetric ; Transitive ; Reflexive ; IsEquivalence ; 
    _Respects_)
 
-open import Relation.Unary using (Pred ; _⊆_)
+open import Relation.Unary using (Pred ; _⊆_ ; _∈_)
 open import Relation.Nullary using (¬_)
 open import Function using (_$_)
 
 open import Categories.Category
 open import CoherentSpace
 
-open import Tensor
+open import Tensor {c} using (F₀ ; F₁)
+
+open import Categories.Morphism using (_≅_)
 
 private 
   CohL' = CohL {c} {c}
-  open Category CohL' using (Obj)
+  open Category CohL' using (Obj ; _⇒_)
   _∣_⇒_⇒_[_∘_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y Z : Category.Obj C) → (g : C [ Y , Z ]) → (f : C [ X , Y ]) → C [ X , Z ]
   C ∣ X ⇒ Y ⇒ Z [ g ∘ f ] = (Category._∘_ C g f) 
 
@@ -28,8 +30,6 @@ private
 
 module _ {X Y Z : Obj} where
   private
-    open import Categories.Morphism using (_≅_)
-
     _≅CohL_ = _≅_ CohL'
 
     [X⊗Y]⊗Z = (F₀ (F₀ (X , Y) , Z))
@@ -394,3 +394,115 @@ module _ {X Y Z : Obj} where
     ; to = to-⇒
     ; iso = iso
     }
+
+module _ {X₁ Y₁ : Obj} 
+         {f : X₁ ⇒ Y₁} 
+         {X₂ Y₂ : Obj} 
+         {g : X₂ ⇒ Y₂} 
+         {X₃ Y₃ : Obj} 
+         {h : X₃ ⇒ Y₃}
+  where
+    private
+      _≈X₁⇒Y₁_ = CoherentSpace._≈_ (X₁ ⇒ₗ Y₁)
+      _≈X₂⇒Y₂_ = CoherentSpace._≈_ (X₂ ⇒ₗ Y₂)
+      _≈X₃⇒Y₃_ = CoherentSpace._≈_ (X₃ ⇒ₗ Y₃)
+
+      f-resp-≈X₁⇒Y₁ : (proj₁ f) Respects _≈X₁⇒Y₁_
+      f-resp-≈X₁⇒Y₁ = proj₂ $ proj₂ f
+
+      g-resp-≈X₂⇒Y₂ : (proj₁ g) Respects _≈X₂⇒Y₂_
+      g-resp-≈X₂⇒Y₂ = proj₂ $ proj₂ g
+
+      h-resp-≈X₃⇒Y₃ : (proj₁ h) Respects _≈X₃⇒Y₃_
+      h-resp-≈X₃⇒Y₃ = proj₂ $ proj₂ h
+
+      X₁⊗X₂ : Obj
+      X₁⊗X₂ = F₀ (X₁ , X₂)
+
+      [X₁⊗X₂]⊗X₃ : Obj
+      [X₁⊗X₂]⊗X₃ = F₀ (X₁⊗X₂ , X₃)
+
+      Y₁⊗Y₂ : Obj
+      Y₁⊗Y₂ = F₀ (Y₁ , Y₂)
+
+      [Y₁⊗Y₂]⊗Y₃ : Obj
+      [Y₁⊗Y₂]⊗Y₃ = F₀ (Y₁⊗Y₂ , Y₃)
+
+      X₂⊗X₃ : Obj
+      X₂⊗X₃ = F₀ (X₂ , X₃) 
+
+      X₁⊗[X₂⊗X₃] : Obj
+      X₁⊗[X₂⊗X₃] = F₀ (X₁ , X₂⊗X₃)
+
+      Y₂⊗Y₃ : Obj
+      Y₂⊗Y₃ = F₀ (Y₂ , Y₃)
+
+      Y₁⊗[Y₂⊗Y₃] : Obj
+      Y₁⊗[Y₂⊗Y₃] = F₀ (Y₁ , Y₂⊗Y₃)
+
+      f⊗g : X₁⊗X₂ ⇒ Y₁⊗Y₂
+      f⊗g = F₁ {X₁ , X₂} {Y₁ , Y₂} (f , g)
+
+      g⊗h : X₂⊗X₃ ⇒ Y₂⊗Y₃
+      g⊗h = F₁ {X₂ , X₃} {Y₂ , Y₃} (g , h)
+
+      [f⊗g]⊗h : [X₁⊗X₂]⊗X₃ ⇒ [Y₁⊗Y₂]⊗Y₃
+      [f⊗g]⊗h = F₁ {X₁⊗X₂ , X₃} {Y₁⊗Y₂ , Y₃} (f⊗g , h) 
+
+      f⊗[g⊗h] : X₁⊗[X₂⊗X₃] ⇒ Y₁⊗[Y₂⊗Y₃]
+      f⊗[g⊗h] = F₁ {X₁ , X₂⊗X₃} {Y₁ , Y₂⊗Y₃} (f , g⊗h)
+
+      fromX : [X₁⊗X₂]⊗X₃ ⇒ X₁⊗[X₂⊗X₃]
+      fromX = _≅_.from (associator {X₁} {X₂} {X₃})
+
+      fromY : [Y₁⊗Y₂]⊗Y₃ ⇒ Y₁⊗[Y₂⊗Y₃]
+      fromY = _≅_.from (associator {Y₁} {Y₂} {Y₃})
+
+      bottomLeft : [X₁⊗X₂]⊗X₃ ⇒ Y₁⊗[Y₂⊗Y₃]
+      bottomLeft = CohL' ∣ [X₁⊗X₂]⊗X₃ ⇒ [Y₁⊗Y₂]⊗Y₃ ⇒ Y₁⊗[Y₂⊗Y₃] [ fromY ∘ [f⊗g]⊗h ]
+  
+      topRight : [X₁⊗X₂]⊗X₃ ⇒ Y₁⊗[Y₂⊗Y₃]
+      topRight = CohL' ∣ [X₁⊗X₂]⊗X₃ ⇒ X₁⊗[X₂⊗X₃] ⇒ Y₁⊗[Y₂⊗Y₃] [ f⊗[g⊗h] ∘ fromX ]
+
+    assoc-commute-from : CohL' ∣ [X₁⊗X₂]⊗X₃ ⇒ Y₁⊗[Y₂⊗Y₃] [ bottomLeft ≈ topRight ]
+    assoc-commute-from = bl⊆tr , tr⊆bl
+      where
+        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
+        bl⊆tr {((x₁ , x₂) , x₃) , (y₁ , (y₂ , y₃))} 
+              (((y₁' , y₂'), y₃') , ((x₁y₁'∈f , x₂y₂'∈g) , x₃y₃'∈h) , (y₁'≈y₁ , y₂'≈y₂ , y₃'≈y₃)) = 
+              ((x₁ , (x₂ , x₃)) , (≈X₁-refl , ≈X₂-refl , ≈X₃-refl) , (x₁y₁∈f , x₂y₂∈g , x₃y₃∈h))
+          where
+            ≈X₁-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence X₁)
+            ≈X₂-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence X₂)
+            ≈X₃-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence X₃)
+
+            x₁y₁∈f : (x₁ , y₁) ∈ (proj₁ f)
+            x₁y₁∈f = f-resp-≈X₁⇒Y₁ (≈X₁-refl , y₁'≈y₁) x₁y₁'∈f
+
+            x₂y₂∈g : (x₂ , y₂) ∈ (proj₁ g)
+            x₂y₂∈g = g-resp-≈X₂⇒Y₂ (≈X₂-refl , y₂'≈y₂) x₂y₂'∈g
+
+            x₃y₃∈h : (x₃ , y₃) ∈ (proj₁ h)
+            x₃y₃∈h = h-resp-≈X₃⇒Y₃ (≈X₃-refl , y₃'≈y₃) x₃y₃'∈h
+
+        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl {((x₁ , x₂) , x₃) , (y₁ , (y₂ , y₃))} 
+              ((x₁' , (x₂' , x₃')) , (x₁≈x₁' , x₂≈x₂' , x₃≈x₃') , (x₁'y₁∈f , x₂'y₂∈g , x₃'y₃∈h)) = 
+              (((y₁ , y₂) , y₃) , ((x₁y₁∈f , x₂y₂∈g) , x₃y₃∈h) , (≈Y₁-refl , ≈Y₂-refl , ≈Y₃-refl))
+          where
+            ≈Y₁-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence Y₁)
+            ≈Y₂-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence Y₂)
+            ≈Y₃-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence Y₃)
+          
+            ≈X₁-sym = IsEquivalence.sym (CoherentSpace.≈-isEquivalence X₁)
+            ≈X₂-sym = IsEquivalence.sym (CoherentSpace.≈-isEquivalence X₂)
+            ≈X₃-sym = IsEquivalence.sym (CoherentSpace.≈-isEquivalence X₃)
+
+            x₁y₁∈f : (x₁ , y₁) ∈ (proj₁ f)
+            x₁y₁∈f = f-resp-≈X₁⇒Y₁ (≈X₁-sym x₁≈x₁' , ≈Y₁-refl) x₁'y₁∈f
+
+            x₂y₂∈g : (x₂ , y₂) ∈ (proj₁ g)
+            x₂y₂∈g = g-resp-≈X₂⇒Y₂ (≈X₂-sym x₂≈x₂' , ≈Y₂-refl) x₂'y₂∈g
+
+            x₃y₃∈h : (x₃ , y₃) ∈ (proj₁ h)
+            x₃y₃∈h = h-resp-≈X₃⇒Y₃ (≈X₃-sym x₃≈x₃' , ≈Y₃-refl) x₃'y₃∈h
