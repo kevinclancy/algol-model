@@ -23,16 +23,16 @@ open import Categories.Category.Monoidal
 open import Categories.Category.Monoidal.Structure using (SymmetricMonoidalCategory)
 open import Categories.Morphism
 
-open import CoherentSpace using (CohL ; CoherentSpace)
+open import CoherentSpace using (CohL ; CoherentSpace ; _⇒'_)
 
 SMCC-CohL : SymmetricMonoidalCategory _ _ _
 SMCC-CohL = record
-  { U = CohL {c} {c} 
+  { U = CohL {c} 
   ; monoidal = monoidal
   ; symmetric = {!!}
   }
   where
-    CohL' = CohL {c} {c}
+    CohL' = CohL {c}
     open Category CohL' using (Obj ; _⇒_ ; _∘_)
     _∣_⇒_⇒_[_∘_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y Z : Category.Obj C) → (g : C [ Y , Z ]) → (f : C [ X , Y ]) → C [ X , Z ]
     C ∣ X ⇒ Y ⇒ Z [ g ∘ f ] = (Category._∘_ C g f) 
@@ -60,14 +60,8 @@ SMCC-CohL = record
 
         module _ {X Y : Obj} where
           private
-    
-            _⊗₀_ : Obj → Obj → Obj
-            A ⊗₀ B = F₀ (A , B)
-
-            _⊗₁_ : ∀ {X Y Z W} → X ⇒ Y → Z ⇒ W → X ⊗₀ Z ⇒ Y ⊗₀ W
-            _⊗₁_ {X} {Y} {Z} {W} f g = F₁ {X , Z} {Y , W} (f , g)
-
             open Commutation CohL'
+            open _⇒'_
 
             a-from = _≅_.from (associator {X} {unit} {Y})
             r-X = _≅_.from (unitorʳ {X})              
@@ -85,6 +79,11 @@ SMCC-CohL = record
             r⊗idY : (X ⊗₀ unit) ⊗₀ Y ⇒ X ⊗₀ Y
             r⊗idY = F₁ {X ⊗₀ unit , Y} {X , Y} (r-X , id-Y) 
 
+          test : [ X ⇒ X ]⟨ id-X ⇒⟨ X ⟩ id-X ≈ id-X ⟩
+          test = Category.identityˡ CohL' {X} {X} {id-X}
+
+          test2 = F₁ (id-X , id-X)
+
           triangle : [ (X ⊗₀ unit) ⊗₀ Y ⇒ X ⊗₀ Y ]⟨ a⦂[idX⊗l] ≈ r⊗idY ⟩
           triangle = l⊆r , r⊆l
             where
@@ -97,7 +96,7 @@ SMCC-CohL = record
               ≈X-trans = IsEquivalence.trans (CoherentSpace.≈-isEquivalence X)
               ≈Y-trans = IsEquivalence.trans (CoherentSpace.≈-isEquivalence Y)
 
-              l⊆r : proj₁ a⦂[idX⊗l] ⊆ proj₁ r⊗idY
+              l⊆r : pred a⦂[idX⊗l] ⊆ pred r⊗idY
               l⊆r {((x , ∗) , y) , (x'' , y'')} 
                   ((x' , (∗ , y')) , (x≈x' , ∗≈∗ , y≈y') , (x'≈x'' , y'≈y'')) = (x≈x'' , y≈y'')
                   where
@@ -107,7 +106,7 @@ SMCC-CohL = record
                     y≈y'' : y ≈Y y''
                     y≈y'' = ≈Y-trans y≈y' y'≈y''
 
-              r⊆l : proj₁ r⊗idY ⊆ proj₁ a⦂[idX⊗l]
+              r⊆l : pred r⊗idY ⊆ pred a⦂[idX⊗l]
               r⊆l {((x , ∗) , y) , (x'' , y'')} 
                   (x≈x'' , y≈y'') = (x , (∗ , y)) , (≈X-refl {x} , ∗≈∗ , ≈Y-refl {y}) , (x≈x'' , y≈y'')
               

@@ -19,7 +19,7 @@ open import Level
 private
   open import Categories.Morphism using (_≅_)
 
-  CohL' = CohL {c} {c}
+  CohL' = CohL {c}
   open Category CohL' using (Obj ; _⇒_ ; id)
 
   ∣_⇒_⇒_[_∘_] : (X Y Z : Category.Obj CohL') → (g : CohL' [ Y , Z ]) → (f : CohL' [ X , Y ]) → CohL' [ X , Z ]
@@ -28,12 +28,13 @@ private
   ∣_⇒_[_≈_] : (X Y : Category.Obj CohL') → (g : CohL' [ X , Y ]) → (f : CohL' [ X , Y ]) → Set _
   ∣ X ⇒ Y [ g ≈ f ] = (Category._≈_ CohL' {X} {Y} g f) 
 
-  data |1| : Set c where
-    ∗ : |1|
+data |1| : Set c where
+  ∗ : |1|
 
-  data _≈1_ : |1| → |1| → Set c where
-    ∗≈∗ : ∗ ≈1 ∗
+data _≈1_ : |1| → |1| → Set c where
+  ∗≈∗ : ∗ ≈1 ∗
 
+private
   ≈-trans : ∀ {x y z : |1|} → x ≈1 y → y ≈1 z → x ≈1 z
   ≈-trans {∗} {∗} {∗} refl₁ refl₂  = ∗≈∗
 
@@ -74,8 +75,8 @@ module _ {X : Obj} where
 
   unitorˡ : F₀ (unit , X) ≅CohL X
   unitorˡ = record
-    { from = from , from-isPoint , from-resp-≈
-    ; to = to , to-isPoint , to-resp-≈
+    { from = record { pred = from ; isPoint = from-isPoint ; resp-≈ = from-resp-≈ }
+    ; to = record { pred = to ; isPoint = to-isPoint ; resp-≈ = to-resp-≈ }
     ; iso = iso
     }
     where
@@ -190,10 +191,10 @@ module _ {X : Obj} where
       unit⊗X≅X = Categories.Morphism.Iso CohL' {F₀ (unit , X)} {X} 
 
       to-⇒ : CohL' [ X , F₀ (unit , X) ]
-      to-⇒ = to , to-isPoint , to-resp-≈
+      to-⇒ = record { pred = to ; isPoint = to-isPoint ; resp-≈ = to-resp-≈ }
 
       from-⇒ : CohL' [ F₀ (unit , X) , X ]             
-      from-⇒ = from , from-isPoint , from-resp-≈
+      from-⇒ = record { pred = from ; isPoint = from-isPoint ; resp-≈ = from-resp-≈ }
 
       iso : unit⊗X≅X from-⇒ to-⇒
       --[[[
@@ -216,8 +217,10 @@ module _ {X : Obj} where
           isoˡ : g-⇒ ≈1⊗X⇒1⊗X id1⊗X-⇒
           isoˡ = g⊆id , id⊆g
             where
-              g₁ = proj₁ g-⇒
-              id₁ = proj₁ id1⊗X-⇒
+              open _⇒'_
+
+              g₁ = pred g-⇒
+              id₁ = pred id1⊗X-⇒
 
               open IsEquivalence (CoherentSpace.≈-isEquivalence X)
 
@@ -230,8 +233,10 @@ module _ {X : Obj} where
           isoʳ : f-⇒ ≈X⇒X idX-⇒
           isoʳ = f⊆id , id⊆f
             where
-              f₁ = proj₁ f-⇒
-              id₁ = proj₁ idX-⇒
+              open _⇒'_
+
+              f₁ = pred f-⇒
+              id₁ = pred idX-⇒
 
               open IsEquivalence (CoherentSpace.≈-isEquivalence X)
 
@@ -244,8 +249,8 @@ module _ {X : Obj} where
 
   unitorʳ : F₀ (X , unit) ≅CohL X
   unitorʳ = record
-    { from = from , from-isPoint , from-resp-≈
-    ; to = to , to-isPoint , to-resp-≈
+    { from = record { pred = from ; isPoint = from-isPoint ; resp-≈ = from-resp-≈ }
+    ; to = record { pred = to ; isPoint = to-isPoint ; resp-≈ = to-resp-≈ }
     ; iso = iso
     }
     where
@@ -359,10 +364,10 @@ module _ {X : Obj} where
       X⊗unit≅X = Categories.Morphism.Iso CohL' {F₀ (X , unit)} {X} 
 
       to-⇒ : CohL' [ X , F₀ (X , unit) ]
-      to-⇒ = to , to-isPoint , to-resp-≈
+      to-⇒ = record { pred = to ; isPoint = to-isPoint ; resp-≈ = to-resp-≈ }
 
       from-⇒ : CohL' [ F₀ (X , unit) , X ]             
-      from-⇒ = from , from-isPoint , from-resp-≈
+      from-⇒ = record { pred = from ; isPoint = from-isPoint ; resp-≈ = from-resp-≈ }
 
       iso : X⊗unit≅X from-⇒ to-⇒ 
       iso = record
@@ -384,8 +389,10 @@ module _ {X : Obj} where
           isoˡ : g-⇒ ≈X⊗1⇒X⊗1 idX⊗1-⇒
           isoˡ = g⊆id , id⊆g
             where
-              g₁ = proj₁ g-⇒
-              id₁ = proj₁ idX⊗1-⇒
+              open _⇒'_
+
+              g₁ = pred g-⇒
+              id₁ = pred idX⊗1-⇒
 
               open IsEquivalence (CoherentSpace.≈-isEquivalence X)
         
@@ -398,8 +405,10 @@ module _ {X : Obj} where
           isoʳ : f-⇒ ≈X⇒X idX-⇒
           isoʳ = f⊆id , id⊆f
             where
-              f₁ = proj₁ f-⇒
-              id₁ = proj₁ idX-⇒
+              open _⇒'_
+
+              f₁ = pred f-⇒
+              id₁ = pred idX-⇒
 
               open IsEquivalence (CoherentSpace.≈-isEquivalence X)
 
@@ -416,9 +425,6 @@ module _ {X : Obj} {Y : Obj} {f : X ⇒ Y} where
     ≈X-sym  = IsEquivalence.sym (CoherentSpace.≈-isEquivalence X)
     ≈Y-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence Y)
 
-    f-resp-≈X⇒Y : (proj₁ f) Respects _≈X⇒Y_
-    f-resp-≈X⇒Y = proj₂ $ proj₂ f
- 
     1⊗X≅X = unitorˡ {X} 
     1⊗Y≅Y = unitorˡ {Y}
 
@@ -427,6 +433,8 @@ module _ {X : Obj} {Y : Obj} {f : X ⇒ Y} where
 
   module _ where
     private
+      open _⇒'_
+
       1⊗X⇒X = _≅_.from 1⊗X≅X 
       1⊗Y⇒Y = _≅_.from 1⊗Y≅Y
   
@@ -439,98 +447,104 @@ module _ {X : Obj} {Y : Obj} {f : X ⇒ Y} where
     unitorˡ-commute-from : ∣ F₀ (unit , X) ⇒ Y [ bottomLeft ≈ topRight ] 
     unitorˡ-commute-from = bl⊆tr , tr⊆bl
       where
-        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
-        bl⊆tr {(∗ , x) , y} ((∗ , y') , (∗≈∗ , xy'∈f) , y'≈y) = x , ≈X-refl , f-resp-≈X⇒Y xy'≈xy xy'∈f 
+        bl⊆tr : pred bottomLeft ⊆ pred topRight
+        bl⊆tr {(∗ , x) , y} ((∗ , y') , (∗≈∗ , xy'∈f) , y'≈y) = x , ≈X-refl , (resp-≈ f) xy'≈xy xy'∈f 
           where
             xy'≈xy : (x , y') ≈X⇒Y (x , y)
             xy'≈xy = ≈X-refl , y'≈y
 
-        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl : pred topRight ⊆ pred bottomLeft
         tr⊆bl {(∗ , x) , y} (x' , x≈x' , x'y∈f) = (∗ , y) , (∗≈∗ , xy∈f) , ≈Y-refl
           where 
             x'y≈xy : (x' , y) ≈X⇒Y (x , y) 
             x'y≈xy = (≈X-sym x≈x' , ≈Y-refl)
 
-            xy∈f : (x , y) ∈ (proj₁ f)
-            xy∈f = f-resp-≈X⇒Y x'y≈xy x'y∈f
+            xy∈f : (x , y) ∈ (pred f)
+            xy∈f = (resp-≈ f) x'y≈xy x'y∈f
 
   module _ where
     private
+      open _⇒'_
+
       X⇒1⊗X = _≅_.to 1⊗X≅X 
       Y⇒1⊗Y = _≅_.to 1⊗Y≅Y
 
-      bottomLeft : X ⇒ F₀ (unit , Y)
-      bottomLeft = ∣ X ⇒ Y ⇒ F₀ (unit , Y) [ Y⇒1⊗Y ∘ f ]
+      bottomLeft : X ⇒ unit ⊗₀ Y
+      bottomLeft = CohL' [ Y⇒1⊗Y ∘ f ]
 
-      topRight : X ⇒ F₀ (unit , Y)
-      topRight = ∣ X ⇒ F₀ (unit , X) ⇒ F₀ (unit , Y) [ F₁ {unit , X} {unit , Y} (id {unit} , f) ∘ X⇒1⊗X ] 
+      topRight : X ⇒ unit ⊗₀ Y
+      topRight = CohL' [ (id {unit} ⊗₁ f) ∘ X⇒1⊗X ] 
 
     unitorˡ-commute-to : ∣ X ⇒ F₀ (unit , Y) [ bottomLeft ≈ topRight ]
     unitorˡ-commute-to = bl⊆tr , tr⊆bl
       where
-        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
+        bl⊆tr : pred bottomLeft ⊆ pred topRight
         bl⊆tr {x , (∗ , y)} (y' , xy'∈f , y'≈y) = (∗ , x) , ≈X-refl , (∗≈∗ , xy∈f)
           where
-            xy∈f : (x , y) ∈ proj₁ f
-            xy∈f = f-resp-≈X⇒Y (≈X-refl , y'≈y) xy'∈f
+            xy∈f : (x , y) ∈ pred f
+            xy∈f = (resp-≈ f) (≈X-refl , y'≈y) xy'∈f
 
-        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl : pred topRight ⊆ pred bottomLeft
         tr⊆bl {x , (∗ , y)} ((∗ , x') , x≈x' , (∗≈∗ , x'y∈f)) = y , xy∈f , ≈Y-refl
           where
-            xy∈f : (x , y) ∈ proj₁ f
-            xy∈f = f-resp-≈X⇒Y (≈X-sym x≈x' , ≈Y-refl) x'y∈f
+            xy∈f : (x , y) ∈ pred f
+            xy∈f = (resp-≈ f) (≈X-sym x≈x' , ≈Y-refl) x'y∈f
           
   module _ where
     private
+      open _⇒'_
+
       X⊗1⇒X = _≅_.from X⊗1≅X 
       Y⊗1⇒Y = _≅_.from Y⊗1≅Y
   
-      bottomLeft : F₀ (X , unit) ⇒ Y
-      bottomLeft = ∣ F₀ (X , unit) ⇒ F₀ (Y , unit) ⇒ Y [ Y⊗1⇒Y ∘ (F₁ {X , unit} {Y , unit} (f , id {unit})) ]
+      bottomLeft : X ⊗₀ unit ⇒ Y
+      bottomLeft = CohL' [ Y⊗1⇒Y ∘ (f ⊗₁ id {unit}) ]
     
-      topRight : F₀ (X , unit) ⇒ Y
-      topRight = ∣ F₀ (X , unit) ⇒ X ⇒ Y [ f ∘ X⊗1⇒X  ]
+      topRight : X ⊗₀ unit ⇒ Y
+      topRight = CohL' [ f ∘ X⊗1⇒X  ]
 
     unitorʳ-commute-from : ∣ F₀ (X , unit) ⇒ Y [ bottomLeft ≈ topRight ] 
     unitorʳ-commute-from = bl⊆tr , tr⊆bl
       where
-        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
-        bl⊆tr {(x , ∗) , y} ((y' , ∗) , (xy'∈f , ∗≈∗) , y'≈y) = x , ≈X-refl , f-resp-≈X⇒Y xy'≈xy xy'∈f 
+        bl⊆tr : pred bottomLeft ⊆ pred topRight
+        bl⊆tr {(x , ∗) , y} ((y' , ∗) , (xy'∈f , ∗≈∗) , y'≈y) = x , ≈X-refl , (resp-≈ f) xy'≈xy xy'∈f 
           where
             xy'≈xy : (x , y') ≈X⇒Y (x , y)
             xy'≈xy = ≈X-refl , y'≈y
 
-        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl : pred topRight ⊆ pred bottomLeft
         tr⊆bl {(x , ∗) , y} (x' , x≈x' , x'y∈f) = (y , ∗) , (xy∈f , ∗≈∗) , ≈Y-refl
           where 
             x'y≈xy : (x' , y) ≈X⇒Y (x , y) 
             x'y≈xy = (≈X-sym x≈x' , ≈Y-refl)
 
-            xy∈f : (x , y) ∈ (proj₁ f)
-            xy∈f = f-resp-≈X⇒Y x'y≈xy x'y∈f
+            xy∈f : (x , y) ∈ (pred f)
+            xy∈f = (resp-≈ f) x'y≈xy x'y∈f
 
   module _ where
     private
+      open _⇒'_
+
       X⇒X⊗1 = _≅_.to X⊗1≅X 
       Y⇒Y⊗1 = _≅_.to Y⊗1≅Y
 
-      bottomLeft : X ⇒ F₀ (Y , unit)
-      bottomLeft = ∣ X ⇒ Y ⇒ F₀ (Y , unit) [ Y⇒Y⊗1 ∘ f ]
+      bottomLeft : X ⇒ Y ⊗₀ unit
+      bottomLeft = CohL' [ Y⇒Y⊗1 ∘ f ]
 
-      topRight : X ⇒ F₀ (Y , unit)
-      topRight = ∣ X ⇒ F₀ (X , unit) ⇒ F₀ (Y , unit) [ F₁ {X , unit} {Y , unit} (f , id {unit}) ∘ X⇒X⊗1 ] 
+      topRight : X ⇒ Y ⊗₀ unit
+      topRight = CohL' [ (f ⊗₁ id {unit}) ∘ X⇒X⊗1 ] 
 
-    unitorʳ-commute-to : ∣ X ⇒ F₀ (Y , unit) [ bottomLeft ≈ topRight ]
+    unitorʳ-commute-to : CohL' [ bottomLeft ≈ topRight ]
     unitorʳ-commute-to = bl⊆tr , tr⊆bl
       where
-        bl⊆tr : proj₁ bottomLeft ⊆ proj₁ topRight
+        bl⊆tr : pred bottomLeft ⊆ pred topRight
         bl⊆tr {x , (y , ∗)} (y' , xy'∈f , y'≈y) = (x , ∗) , ≈X-refl , (xy∈f , ∗≈∗)
           where
-            xy∈f : (x , y) ∈ proj₁ f
-            xy∈f = f-resp-≈X⇒Y (≈X-refl , y'≈y) xy'∈f
+            xy∈f : (x , y) ∈ pred f
+            xy∈f = (resp-≈ f) (≈X-refl , y'≈y) xy'∈f
 
-        tr⊆bl : proj₁ topRight ⊆ proj₁ bottomLeft
+        tr⊆bl : pred topRight ⊆ pred bottomLeft
         tr⊆bl {x , (y , ∗)} ((x' , ∗) , x≈x' , (x'y∈f , ∗≈∗)) = y , xy∈f , ≈Y-refl
           where
-            xy∈f : (x , y) ∈ proj₁ f
-            xy∈f = f-resp-≈X⇒Y (≈X-sym x≈x' , ≈Y-refl) x'y∈f
+            xy∈f : (x , y) ∈ pred f
+            xy∈f = (resp-≈ f) (≈X-sym x≈x' , ≈Y-refl) x'y∈f

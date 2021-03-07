@@ -10,21 +10,21 @@ open import Data.Empty
 open import Relation.Binary using 
   (Rel ; _Respectsˡ_ ; Symmetric ; Transitive ; Reflexive ; IsEquivalence ; 
    _Respects_)
-open import Relation.Unary
+open import Relation.Unary hiding (_⇒_)
 open import Relation.Nullary using (¬_)
 
 open import Function using (_$_)
 
-open import Categories.Category
+open import Categories.Category 
 open import Categories.Category.Product
 open import Categories.Functor.Bifunctor
 
 open import CoherentSpace
 
 private
-  CohL' = CohL {c} {c}
-  open Category CohL' using (Obj)
-  open Category.Equiv CohL' 
+  CohL' = CohL {c}
+  open Category CohL' using (Obj ; _⇒_)
+  open Category.Equiv CohL'
 
   _∣_⇒_⇒_[_∘_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y Z : Category.Obj C) → (g : C [ Y , Z ]) → (f : C [ X , Y ]) → C [ X , Z ]
   C ∣ X ⇒ Y ⇒ Z [ g ∘ f ] = (Category._∘_ C g f) 
@@ -119,11 +119,14 @@ F₀ (A , B) = A⊗B
 F₁ : {(A , B) : Obj × Obj} → {(C , D) : Obj × Obj} → 
      (Product CohL' CohL' [ (A , B) , (C , D) ]) → 
      (CohL' [ F₀ (A , B) , F₀ (C , D) ])  
-F₁ {A , B} {C , D} ((f , f-isPoint , f-Respects-≈A⊗C) , (g , g-isPoint , g-Respects-≈B⊗D)) = f⊗g 
+F₁ {A , B} {C , D} (record { pred = f ; isPoint = f-isPoint ; resp-≈ = f-Respects-≈ } , 
+                    record { pred = g ; isPoint = g-isPoint ; resp-≈ = g-Respects-≈ }) = f⊗g 
   where
     --[[[
-
-    A⊗B⇒ₗC⊗D : CoherentSpace _ _ 
+    _⊗₀_ : Obj → Obj → Obj
+    A ⊗₀ B = F₀ (A , B)
+ 
+    A⊗B⇒ₗC⊗D : CoherentSpace _ 
     A⊗B⇒ₗC⊗D = ((F₀ $ A , B) ⇒ₗ (F₀ $ C , D))
 
     _≈_ = CoherentSpace._≈_ A⊗B⇒ₗC⊗D 
@@ -131,8 +134,8 @@ F₁ {A , B} {C , D} ((f , f-isPoint , f-Respects-≈A⊗C) , (g , g-isPoint , g
     |A⊗B⇒ₗC⊗D| : Set _
     |A⊗B⇒ₗC⊗D| = CoherentSpace.TokenSet A⊗B⇒ₗC⊗D
 
-    f⊗g : Σ[ P ∈ Pred |A⊗B⇒ₗC⊗D| _ ] ((CoherentSpace.isPoint A⊗B⇒ₗC⊗D P) × (P Respects _≈_)) 
-    f⊗g = P , isPoint , P-Respects-≈
+    f⊗g : (A ⊗₀ B) ⇒ (C ⊗₀ D) -- Σ[ P ∈ Pred |A⊗B⇒ₗC⊗D| _ ] ((CoherentSpace.isPoint A⊗B⇒ₗC⊗D P) × (P Respects _≈_)) 
+    f⊗g = record { pred = P ; isPoint = isPoint ; resp-≈ = P-Respects-≈ }
       where
         P : Pred |A⊗B⇒ₗC⊗D| _
         P ((a , b) , (c , d)) = ((a , c) ∈ f) × ((b , d) ∈ g) 
@@ -200,18 +203,20 @@ F₁ {A , B} {C , D} ((f , f-isPoint , f-Respects-≈A⊗C) , (g , g-isPoint , g
                 ¬ab∼a'b' (a∼a' , b∼b') = ¬cd∼c'd' (a∼a'→c∼c' a∼a' , b∼b'→d∼d' b∼b') 
 
         P-Respects-≈ : P Respects _≈_  
-        P-Respects-≈ ((a , b) , (c , d)) (ac∈f , bd∈g) = f-Respects-≈A⊗C (a , c) ac∈f , g-Respects-≈B⊗D (b , d) bd∈g
+        P-Respects-≈ ((a , b) , (c , d)) (ac∈f , bd∈g) = f-Respects-≈ (a , c) ac∈f , g-Respects-≈ (b , d) bd∈g
 
     --]]]
 
-identity : {(A , B) : Obj × Obj} → _[_≈_] CohL' {F₀ $ A , B} {F₀ $ A , B} (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL') {A , B})) (Category.id CohL' {F₀ $ A , B})
+identity : {(A , B) : Obj × Obj} → CohL' [ (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL'))) ≈ (Category.id CohL') ]
 --[[[
 identity {A , B} = (λ {x} → id⊗id⊆id {x}) , (λ {x} → id⊆id⊗id {x})
   where
-    id  = proj₁ (Category.id CohL' {F₀ $ A , B})
-    id⊗id  = proj₁ (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL') {A , B}))
+    open CoherentSpace._⇒'_
 
-    id⊗id⊆id : id⊗id ⊆ id
+    id  = _⇒'_.pred (Category.id CohL' {F₀ $ A , B})
+    id⊗id  = pred (F₁ {A , B} {A , B} (Category.id (Product CohL' CohL') {A , B}))
+    
+    id⊗id⊆id : id⊗id ⊆ id 
     id⊗id⊆id {(a , b) , (a' , b')} (a≈a' , b≈b') = (a≈a' , b≈b')
 
     id⊆id⊗id : id ⊆ id⊗id
@@ -219,17 +224,18 @@ identity {A , B} = (λ {x} → id⊗id⊆id {x}) , (λ {x} → id⊆id⊗id {x})
 --]]]
 
 module _ {X Y Z : Obj × Obj} {f : Product CohL' CohL' [ X , Y ]} {g : Product CohL' CohL' [ Y , Z ]} where
+  open _⇒'_
 
-  _∘CC_ = Category._∘_ (Product CohL' CohL') {X} {Y} {Z}
-  _∘C_ = Category._∘_ CohL' {F₀ X} {F₀ Y} {F₀ Z}
+  _∘CC_ = Category._∘_ (Product CohL' CohL')
+  _∘C_ = Category._∘_ CohL'
   _≈C_ = Category._≈_ CohL' {F₀ X} {F₀ Z}
-
+  
   hom : (F₁ {X} {Z} $ g ∘CC f) ≈C ((F₁ {Y} {Z} g) ∘C (F₁ {X} {Y} f))
   --[[[
   hom = F[g∘f]⊆F[g]∘F[f] , F[g]∘F[f]⊆F[g∘f]
     where
-      pred-F[g∘f] = proj₁ (F₁ {X} {Z} (g ∘CC f))
-      pred-F[g]∘F[f] = proj₁ ((F₁ {Y} {Z} g) ∘C (F₁ {X} {Y} f))
+      pred-F[g∘f] = pred (F₁ {X} {Z} (g ∘CC f))
+      pred-F[g]∘F[f] = pred ((F₁ {Y} {Z} g) ∘C (F₁ {X} {Y} f))
 
       F[g∘f]⊆F[g]∘F[f] : pred-F[g∘f] ⊆ pred-F[g]∘F[f]  
       F[g∘f]⊆F[g]∘F[f] {((x₁ , x₂) , (z₁ , z₂))} ((y₁ , x₁y₁∈f₁ , y₁z₁∈g₁) , (y₂ , x₂y₂∈f₂ , y₂z₂∈g₂)) = p
@@ -246,15 +252,22 @@ module _ {X Y Z : Obj × Obj} {f : Product CohL' CohL' [ X , Y ]} {g : Product C
   --]]]
 
 module _ {A B : Obj × Obj} {f g : Product CohL' CohL' [ A , B ]} where
+  open _⇒'_
 
-  F-resp-≈ : (Product CohL' CohL' ∣ A ⇒ B [ f ≈ g ]) → (CohL' ∣ (F₀ A) ⇒ (F₀ B) [ (F₁ {A} {B} f) ≈ (F₁ {A} {B} g) ])
+  F-resp-≈ : (Product CohL' CohL' [ f ≈ g ]) → (CohL' [ (F₁ {A} {B} f) ≈ (F₁ {A} {B} g) ])
   F-resp-≈ ((f₁⊆g₁ , g₁⊆f₁) , (f₂⊆g₂ , g₂⊆f₂)) = F[f]⊆F[g] , F[g]⊆F[f]
     where
-      F[f]⊆F[g] : proj₁ (F₁ {A} {B} f) ⊆ proj₁ (F₁ {A} {B} g)
+      F[f]⊆F[g] : pred (F₁ {A} {B} f) ⊆ pred (F₁ {A} {B} g)
       F[f]⊆F[g] {(a₁ , a₂) , (b₁ , b₂)} (a₁b₁∈f₁ , a₂b₂∈f₂) = f₁⊆g₁ a₁b₁∈f₁ , f₂⊆g₂ a₂b₂∈f₂ 
 
-      F[g]⊆F[f] : proj₁ (F₁ {A} {B} g) ⊆ proj₁ (F₁ {A} {B} f)
+      F[g]⊆F[f] : pred (F₁ {A} {B} g) ⊆ pred (F₁ {A} {B} f)
       F[g]⊆F[f] {(a₁ , a₂) , (b₁ , b₂)} (a₁b₁∈g₁ , a₂b₂∈g₂) = g₁⊆f₁ a₁b₁∈g₁ , g₂⊆f₂ a₂b₂∈g₂
+
+_⊗₀_ : Obj → Obj → Obj
+A ⊗₀ B = F₀ (A , B)
+ 
+_⊗₁_ : {A B C D : Obj} → (f : A ⇒ B) → (g : C ⇒ D) → (A ⊗₀ C) ⇒ (B ⊗₀ D) 
+f ⊗₁ g = F₁ (f , g) 
 
 ⊗ : Bifunctor CohL' CohL' CohL'
 ⊗ = record

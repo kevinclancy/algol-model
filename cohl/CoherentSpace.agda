@@ -1,13 +1,15 @@
+{-# OPTIONS --without-K --safe #-}
+
 module CoherentSpace where
 
 open import Data.Sum using (_⊎_)
 
-open import Function hiding (_⇔_)
+open import Function hiding (_⇔_ ; _∘_)
 open import Relation.Binary hiding (_⇒_ ; _⇔_) 
 open import Relation.Binary.Lattice
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Data.Product
-open import Data.Sum
+open import Data.Sum using (_⊎_ ; inj₁ ; inj₂)
 open import Data.Empty
 open import Data.Bool
 open import Relation.Nullary using (¬_)
@@ -19,16 +21,16 @@ open import Categories.Category
 _⇔_ : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₃} → (Pred A ℓ₁) → (Pred A ℓ₂) → Set _
 P ⇔ Q = (P ⊆ Q) × (Q ⊆ P)   
 
-record CoherentSpace c ℓ : Set (suc (c ⊔ ℓ)) where
+record CoherentSpace c : Set (suc c) where
+  eta-equality
   field
     -- The token set
     TokenSet : Set c
     -- The setoid equivalence
     _≈_      : Rel TokenSet c
     -- The consistency relation
-    _∼_      : Rel TokenSet ℓ
-    
-    ∼-respˡ-≈ : _∼_ Respectsˡ _≈_
+    _∼_      : Rel TokenSet c
+    ∼-respˡ-≈ : _Respectsˡ_ {c} {TokenSet} _∼_ _≈_
     ≈→∼ : ∀ {a b} → (a ≈ b) → (a ∼ b)
     ∼-sym  : Symmetric _∼_
     ∼-refl : Reflexive _∼_ 
@@ -60,13 +62,13 @@ record CoherentSpace c ℓ : Set (suc (c ⊔ ℓ)) where
     ; isEquivalence = ≈-isEquivalence
     }
 
-  isPoint : ∀ {ℓ} → Pred TokenSet ℓ → Set _
-  isPoint {ℓ} P = (p₁ p₂ : TokenSet) → p₁ ∈ P → p₂ ∈ P → p₁ ∼ p₂
+  isPoint : Pred TokenSet c → Set _
+  isPoint P = (p₁ p₂ : TokenSet) → p₁ ∈ P → p₂ ∈ P → p₁ ∼ p₂
 
   Point : Set _
   Point = Σ[ p ∈ Pred TokenSet c ] (isPoint p) × (p Respects _≈_) 
 
-  downwardClosed : ∀ {ℓ₃ ℓ₄} → (P : Pred TokenSet ℓ₃) → isPoint P → (Q : Pred TokenSet ℓ₄) → Q ⊆ P → isPoint Q 
+  downwardClosed : (P : Pred TokenSet c) → isPoint P → (Q : Pred TokenSet c) → Q ⊆ P → isPoint Q 
   downwardClosed P isPointP Q Q⊆P p₁ p₂ p₁∈Q p₂∈Q = isPointP p₁ p₂ p₁∈P p₂∈P
     where
       p₁∈P : p₁ ∈ P
@@ -75,9 +77,9 @@ record CoherentSpace c ℓ : Set (suc (c ⊔ ℓ)) where
       p₂∈P : p₂ ∈ P
       p₂∈P = Q⊆P p₂∈Q
 
-  coherent : ∀ {ℓ₃ ℓ₄} → (IndexSet : Set ℓ₃) → (P : IndexSet → Pred TokenSet ℓ₄) → 
+  coherent : (IndexSet : Set c) → (P : IndexSet → Pred TokenSet c) → 
              (∀ {i j} → (isPoint $ (P i) ∪ (P j))) → (isPoint $ ⋃ IndexSet P)
-  coherent {ℓ₃} {ℓ₄} IndexSet P ∪-closed p₁ p₂ (i , p₁∈Pᵢ) (j , p₂∈Pⱼ) = ∪-closed p₁ p₂ p₁∈Pᵢ∪Pⱼ p₂∈Pᵢ∪Pⱼ
+  coherent IndexSet P ∪-closed p₁ p₂ (i , p₁∈Pᵢ) (j , p₂∈Pⱼ) = ∪-closed p₁ p₂ p₁∈Pᵢ∪Pⱼ p₂∈Pᵢ∪Pⱼ
       where
         p₁∈Pᵢ∪Pⱼ : p₁ ∈ (P i) ∪ (P j)
         p₁∈Pᵢ∪Pⱼ = Data.Sum.inj₁ p₁∈Pᵢ
@@ -85,7 +87,8 @@ record CoherentSpace c ℓ : Set (suc (c ⊔ ℓ)) where
         p₂∈Pᵢ∪Pⱼ : p₂ ∈ (P i) ∪ (P j)
         p₂∈Pᵢ∪Pⱼ = Data.Sum.inj₂ p₂∈Pⱼ 
 
-CoherentSpaceBool : CoherentSpace _ _
+{--
+CoherentSpaceBool : CoherentSpace _
 CoherentSpace.TokenSet CoherentSpaceBool = Bool
 CoherentSpace._≈_ CoherentSpaceBool = _≡_
 CoherentSpace._∼_ CoherentSpaceBool = _≡_
@@ -94,11 +97,12 @@ CoherentSpace.≈→∼ CoherentSpaceBool a≡b = a≡b
 CoherentSpace.∼-sym CoherentSpaceBool = PE.sym
 CoherentSpace.∼-refl CoherentSpaceBool = PE.refl
 CoherentSpace.≈-isEquivalence CoherentSpaceBool = PE.isEquivalence
+--}
 
-_⇒ₗ_ : ∀ {c ℓ c' ℓ'} → (P : CoherentSpace c ℓ) → (Q : CoherentSpace c' ℓ') → 
-       (CoherentSpace _ _)
+_⇒ₗ_ : ∀ {c c'} → (P : CoherentSpace c) → (Q : CoherentSpace c') → 
+       (CoherentSpace (c ⊔ c'))
 
-_⇒ₗ_ {c} {ℓ} {c'} {ℓ'} P Q = space
+_⇒ₗ_ {c} {c'} P Q = space
   where
     open CoherentSpace P renaming 
       (TokenSet to |P| ; _∼_ to _∼p_ ; _≁_ to _≁p_ ; _≈_ to _≈p_ ; ∼-refl to ∼p-refl ; ∼-sym to ∼p-sym ;
@@ -117,7 +121,7 @@ _⇒ₗ_ {c} {ℓ} {c'} {ℓ'} P Q = space
     _∼p×q_ : Rel (|P| × |Q|) _ -- (ℓ₁ ⊔ ℓ₁' ⊔ ℓ₂ ⊔ ℓ₂' ⊔ c ⊔ c')
     (p , q) ∼p×q (p' , q') = ((p ∼p p') → (q ∼q q')) × ((q ≁q q') → (p ≁p p'))
 
-    space : CoherentSpace _ _
+    space : CoherentSpace _
     space = record 
       { TokenSet = |P| × |Q| 
       ; _≈_ = _≈p×q_
@@ -218,14 +222,21 @@ _⇒ₗ_ {c} {ℓ} {c'} {ℓ'} P Q = space
             q≁q→p≁p : q ≁q q → p ≁p p
             q≁q→p≁p q≁q = inj₁ ≈p-refl
 
-            
-CohL : ∀ {c ℓ} → Category (suc c ⊔ suc ℓ) (suc c ⊔ ℓ) c
-CohL {c} {ℓ} = record
-  { Obj = CoherentSpace c ℓ 
+
+record _⇒'_ {c} (A : CoherentSpace c) (B : CoherentSpace c) : Set (suc c) where
+  eta-equality
+  field
+    pred    : Pred (CoherentSpace.TokenSet $ A ⇒ₗ B) c
+    isPoint : CoherentSpace.isPoint (A ⇒ₗ B) pred
+    resp-≈  : pred Respects (CoherentSpace._≈_ $ A ⇒ₗ B)
+   
+CohL : ∀ {c} → Category _ _ _
+CohL {c} = record
+  { Obj = CoherentSpace c 
   ; _⇒_ = _⇒'_
   ; _≈_ = (λ {A} {B} → _≈'_ {A} {B})
   ; id = (λ {A} → identity {A})
-  ; _∘_ = (λ {A} {B} {C} → comp {A} {B} {C})
+  ; _∘_ = _∘_
   ; assoc = (λ {A} {B} {C} {D} {f} {g} {h} → assoc {A} {B} {C} {D} {f} {g} {h})
   ; sym-assoc = (λ {A} {B} {C} {D} {f} {g} {h} → sym-assoc {A} {B} {C} {D} {f} {g} {h})
   ; identityˡ = (λ {A} {B} {f} → identityˡ {A} {B} {f})
@@ -235,33 +246,28 @@ CohL {c} {ℓ} = record
   ; ∘-resp-≈ = λ {A} {B} {C} {f} {g} {h} {i} →  ∘-resp-≈ {A} {B} {C} {f} {g} {h} {i}
   }
   where
-    
+    _≈'_ : {A B : CoherentSpace c} → Rel (A ⇒' B) c
+    _≈'_ {A} {B} f g = (_⇒'_.pred f) ⇔ (_⇒'_.pred g)
 
-    _⇒'_ : CoherentSpace c ℓ → CoherentSpace c ℓ → Set _
-    _⇒'_ P Q = CoherentSpace.Point (P ⇒ₗ Q)
-
-    _≈'_ : {A B : CoherentSpace c ℓ} → Rel (A ⇒' B) c
-    _≈'_ f g = (proj₁ f) ⇔ (proj₁ g)
-
-    equiv : ∀ {A B : CoherentSpace c ℓ} → IsEquivalence (_≈'_ {A} {B})
+    equiv : ∀ {A B : CoherentSpace c} → IsEquivalence (_≈'_ {A} {B})
     equiv {A} {B} = record { sym = λ {f} {g} → sym {f} {g} ; trans = λ {f} {g} {h} → trans {f} {g} {h} ; refl = λ {f} → refl {f}}
       where
         open CoherentSpace (A ⇒ₗ B)
 
-        _eq_ : Rel (CoherentSpace.Point $ A ⇒ₗ B) _
-        _eq_ = _≈'_ {A} {B}
+        --_eq_ : Rel (CoherentSpace.Point $ A ⇒ₗ B) _
+        --_eq_ = _≈'_ {A} {B}
 
-        refl : ∀ {f : A ⇒' B} → (f eq f)
+        refl : ∀ {f : A ⇒' B} → (f ≈' f)
         refl {f} = (λ f⊆f → f⊆f) , (λ f⊆f → f⊆f)
         
-        sym : ∀ {f g : A ⇒' B} → (f eq g) → (g eq f)
+        sym : ∀ {f g : A ⇒' B} → (f ≈' g) → (g ≈' f)
         sym {f} {g} (f⊆g , g⊆f) = g⊆f , f⊆g
 
-        trans : ∀ {f g h : A ⇒' B} → (f eq g) → (g eq h) → (f eq h)
+        trans : ∀ {f g h : A ⇒' B} → (f ≈' g) → (g ≈' h) → (f ≈' h)
         trans {f} {g} {h} (f⊆g , g⊆f) (g⊆h , h⊆g) = ((λ {ab} ab∈f → g⊆h (f⊆g ab∈f)) , (λ {ab} ab∈h → g⊆f (h⊆g ab∈h)))  
 
-    identity : {A : CoherentSpace c ℓ} → (A ⇒' A)
-    identity {A} = (pred , (predIsPoint , pred-Respects-≈))
+    identity : {A : CoherentSpace c} → (A ⇒' A)
+    identity {A} = record { pred = pred ; isPoint = predIsPoint ; resp-≈ = pred-Respects-≈ }
       where
         open CoherentSpace A
 
@@ -309,8 +315,10 @@ CohL {c} {ℓ} = record
           where
             open IsEquivalence (CoherentSpace.≈-isEquivalence A)
 
-    comp : ∀ {A B C : CoherentSpace c ℓ} → (B ⇒' C) → (A ⇒' B) → (A ⇒' C)
-    comp {A} {B} {C} (g , (g-isPoint , g-Respects-≈)) (f , (f-isPoint , f-Respects-≈)) = pred , isPoint , pred-respects-≈
+    _∘_ : ∀ {A B C : CoherentSpace c} → (B ⇒' C) → (A ⇒' B) → (A ⇒' C)
+    _∘_ {A} {B} {C} (record { pred = g ; isPoint = g-isPoint ; resp-≈ = g-Respects-≈ }) 
+                     (record { pred = f ; isPoint = f-isPoint ; resp-≈ = f-Respects-≈ }) = 
+      record { pred = pred ; isPoint = isPoint ; resp-≈ = pred-respects-≈ }
       where
         pred : Pred (CoherentSpace.TokenSet (A ⇒ₗ C)) _
         pred (a , c) =  Σ[ b ∈ (CoherentSpace.TokenSet B) ] ((a , b) ∈ f) × ((b , c) ∈ g)
@@ -354,52 +362,46 @@ CohL {c} {ℓ} = record
                 b≁b' = proj₂ (g-isPoint (b , c) (b' , c') bc∈g b'c'∈g) c≁c' 
 
     assoc : ∀ {A B C D} {f : A ⇒' B} {g : B ⇒' C} {h : C ⇒' D} → 
-            _≈'_ {A} {D} (comp {A} {B} {D} (comp {B} {C} {D} h g) f) 
-                         (comp {A} {C} {D} h (comp {A} {B} {C} g f))
+            ((h ∘ g) ∘ f) ≈' (h ∘ (g ∘ f)) 
     assoc {A} {B} {C} {D} {f} {g} {h} = hg∘f⊆h∘gf , h∘gf⊆hg∘f
       where
-        _∘ABD_ = comp {A} {B} {D}
-        _∘BCD_ = comp {B} {C} {D}
-        _∘ACD_ = comp {A} {C} {D}
-        _∘ABC_ = comp {A} {B} {C}
+        open _⇒'_
  
         hg∘f : Pred (CoherentSpace.TokenSet (A ⇒ₗ D)) _
-        hg∘f = proj₁ ((h ∘BCD g) ∘ABD f)
+        hg∘f = ((h ∘ g) ∘ f).pred
 
         h∘gf : Pred (CoherentSpace.TokenSet (A ⇒ₗ D)) _
-        h∘gf = proj₁ (h ∘ACD (g ∘ABC f))
+        h∘gf = (h ∘ (g ∘ f)).pred
 
         hg∘f⊆h∘gf : hg∘f ⊆ h∘gf
-        hg∘f⊆h∘gf {(a , d)} (b , (ab∈f , (c , (bc∈g , cd∈h)))) = (c , (ac∈g∘f , cd∈h))
+        hg∘f⊆h∘gf {a , d} (b , (ab∈f , (c , (bc∈g , cd∈h)))) = (c , (ac∈g∘f , cd∈h))
           where
-            ac∈g∘f : (a , c) ∈ (proj₁ $ g ∘ABC f)
+            ac∈g∘f : (a , c) ∈ (g ∘ f).pred
             ac∈g∘f = (b , (ab∈f , bc∈g))
 
         h∘gf⊆hg∘f : h∘gf ⊆ hg∘f
         h∘gf⊆hg∘f {(a , d)} (c , ((b , (ab∈f , bc∈g)), cd∈h)) = (b , (ab∈f , bd∈h∘g))
           where
-            bd∈h∘g : (b , d) ∈ (proj₁ $ h ∘BCD g)
+            bd∈h∘g : (b , d) ∈ (h ∘ g).pred
             bd∈h∘g = (c , (bc∈g , cd∈h))
 
-    sym-assoc : ∀ {A B C D} {f} {g} {h} → 
-                  _≈'_ {A} {D} (comp {A} {C} {D} h (comp {A} {B} {C} g f))  
-                  (comp {A} {B} {D} (comp {B} {C} {D} h g) f)
+    sym-assoc : ∀ {A B C D} {f} {g} {h} → (h ∘ (g ∘ f)) ≈' ((h ∘ g) ∘ f)  
     sym-assoc {A} {B} {C} {D} {f} {g} {h} with (assoc {A} {B} {C} {D} {f} {g} {h}) 
     sym-assoc {A} {B} {C} {D} {f} {g} {h} | (hg∘f⊆h∘gf , h∘gf⊆hg∘f) = (h∘gf⊆hg∘f , hg∘f⊆h∘gf) 
 
-    identityˡ : ∀ {A B} {f : A ⇒' B} → _≈'_ {A} {B} (comp {A} {B} {B} (identity {B}) f) f
+    identityˡ : ∀ {A B} {f : A ⇒' B} → (identity ∘ f) ≈' f
     identityˡ {A} {B} {f} = ab∈id∘f→ab∈f , ab∈f→ab∈id∘f
       where
-        f-respˡ-≈ = proj₂ (proj₂ f)
-        _∘ABB_ = comp {A} {B} {B}
+        open _⇒'_
+        f-respˡ-≈ = resp-≈ f
         id-B = identity {B}
         
-        ab∈f→ab∈id∘f : {ab : CoherentSpace.TokenSet (A ⇒ₗ B)} → (ab ∈ (proj₁ f)) → (ab ∈ (proj₁ $ id-B ∘ABB f)) 
+        ab∈f→ab∈id∘f : {ab : CoherentSpace.TokenSet (A ⇒ₗ B)} → (ab ∈ (pred f)) → (ab ∈ (pred $ id-B ∘ f)) 
         ab∈f→ab∈id∘f {a , b} ab∈f  = (b , (ab∈f , ≈b-refl))
           where
             open IsEquivalence (CoherentSpace.≈-isEquivalence B) renaming (refl to ≈b-refl)
             
-        ab∈id∘f→ab∈f : {ab : CoherentSpace.TokenSet (A ⇒ₗ B)} → (ab ∈ (proj₁ $ id-B ∘ABB f)) → (ab ∈ (proj₁ f))
+        ab∈id∘f→ab∈f : {ab : CoherentSpace.TokenSet (A ⇒ₗ B)} → (ab ∈ (id-B ∘ f).pred) → (ab ∈ (pred f))
         ab∈id∘f→ab∈f {a , b} (b' , (ab'∈f , b'≈b)) = f-respˡ-≈ (≈ab-sym ab≈ab') ab'∈f 
           where
             open CoherentSpace A renaming (_≈_ to _≈a_)
@@ -412,20 +414,18 @@ CohL {c} {ℓ} = record
             ab≈ab' : (a , b) ≈ab (a , b')
             ab≈ab' = (≈a-refl , ≈b-sym b'≈b)
 
-    identityʳ : ∀ {A B} {f : A ⇒' B} → _≈'_ {A} {B} (comp {A} {A} {B} f (identity {A})) f
+    identityʳ : ∀ {A B} {f : A ⇒' B} → (f ∘ identity) ≈' f
     identityʳ {A} {B} {f} = ab∈f∘id→ab∈f , ab∈f→ab∈f∘id
       where
-        f-respˡ-≈ = proj₂ (proj₂ f)
-        _∘AAB_ = comp {A} {A} {B}
-        id-A = identity {A}
+        open _⇒'_
 
-        ab∈f→ab∈f∘id : {ab : CoherentSpace.TokenSet (A ⇒ₗ B)} → (ab ∈ (proj₁ f)) → (ab ∈ (proj₁ $ f ∘AAB id-A))
+        ab∈f→ab∈f∘id : {ab : CoherentSpace.TokenSet (A ⇒ₗ B)} → (ab ∈ (pred f)) → (ab ∈ (pred $ f ∘ identity))
         ab∈f→ab∈f∘id {a , b} ab∈f = (a , (≈a-refl , ab∈f))
           where
             open IsEquivalence (CoherentSpace.≈-isEquivalence A) renaming (refl to ≈a-refl)
 
-        ab∈f∘id→ab∈f : {ab : CoherentSpace.TokenSet (A ⇒ₗ B)} → (ab ∈ (proj₁ $ f ∘AAB id-A)) → (ab ∈ (proj₁ f))
-        ab∈f∘id→ab∈f {a , b} (a' , (a≈a' , a'b∈f)) = f-respˡ-≈ (≈ab-sym ab≈a'b) a'b∈f
+        ab∈f∘id→ab∈f : {ab : CoherentSpace.TokenSet (A ⇒ₗ B)} → (ab ∈ (pred $ f ∘ identity)) → (ab ∈ (pred f))
+        ab∈f∘id→ab∈f {a , b} (a' , (a≈a' , a'b∈f)) = (resp-≈ f) (≈ab-sym ab≈a'b) a'b∈f
           where
             open CoherentSpace A renaming (_≈_ to _≈a_)
             open CoherentSpace B renaming (_≈_ to _≈b_)
@@ -437,15 +437,15 @@ CohL {c} {ℓ} = record
             ab≈a'b : (a , b) ≈ab (a' , b)
             ab≈a'b = (a≈a' , ≈b-refl)
 
-    ∘-resp-≈ : {A B C : CoherentSpace c ℓ} {f h : B ⇒' C} {g i : A ⇒' B} → (_≈'_ {B} {C} f h) → (_≈'_ {A} {B} g i) → (_≈'_ {A} {C} (comp {A} {B} {C} f g) (comp {A} {B} {C} h i))
+    ∘-resp-≈ : {A B C : CoherentSpace c} {f h : B ⇒' C} {g i : A ⇒' B} → (_≈'_ {B} {C} f h) → (_≈'_ {A} {B} g i) → ((f ∘ g) ≈' (h ∘ i))
     ∘-resp-≈ {A} {B} {C} {f} {h} {g} {i} (bc∈f→bc∈h , bc∈h→bc∈f) (ab∈g→ab∈i , ab∈i→ab∈g) = ac∈f∘g→ac∈h∘i , ac∈h∘i→ac∈f∘g
       where
-        _∘ABC_ = comp {A} {B} {C}
+        open _⇒'_
         |A| = CoherentSpace.TokenSet A
         |C| = CoherentSpace.TokenSet C
 
-        ac∈f∘g→ac∈h∘i : ∀ {a : |A|} {c : |C|} → (a , c) ∈ (proj₁ $ f ∘ABC g) → (a , c) ∈ (proj₁ $ h ∘ABC i)
+        ac∈f∘g→ac∈h∘i : ∀ {a : |A|} {c : |C|} → (a , c) ∈ (pred $ f ∘ g) → (a , c) ∈ (pred $ h ∘ i)
         ac∈f∘g→ac∈h∘i {a} {c} (b , (ab∈g , bc∈f)) = b , ab∈g→ab∈i ab∈g , bc∈f→bc∈h bc∈f 
 
-        ac∈h∘i→ac∈f∘g : ∀ {a : |A|} {c : |C|} → (a , c) ∈ (proj₁ $ h ∘ABC i) → (a , c) ∈ (proj₁ $ f ∘ABC g)
+        ac∈h∘i→ac∈f∘g : ∀ {a : |A|} {c : |C|} → (a , c) ∈ (pred $ h ∘ i) → (a , c) ∈ (pred $ f ∘ g)
         ac∈h∘i→ac∈f∘g {a} {c} (b , (ab∈i , bc∈h)) = b , ab∈i→ab∈g ab∈i , bc∈h→bc∈f bc∈h
