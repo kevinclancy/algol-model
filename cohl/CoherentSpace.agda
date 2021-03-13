@@ -223,6 +223,8 @@ _⇒ₗ_ {c} {c'} P Q = space
             q≁q→p≁p q≁q = inj₁ ≈p-refl
 
 
+infixl 4 _⇒ₗ_
+
 record _⇒'_ {c} (A : CoherentSpace c) (B : CoherentSpace c) : Set (suc c) where
   eta-equality
   field

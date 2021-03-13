@@ -26,12 +26,6 @@ private
   open Category CohL' using (Obj ; _⇒_)
   open Category.Equiv CohL'
 
-  _∣_⇒_⇒_[_∘_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y Z : Category.Obj C) → (g : C [ Y , Z ]) → (f : C [ X , Y ]) → C [ X , Z ]
-  C ∣ X ⇒ Y ⇒ Z [ g ∘ f ] = (Category._∘_ C g f) 
-
-  _∣_⇒_[_≈_] : ∀ {o ℓ e} (C : Category o ℓ e) → (X Y : Category.Obj C) → (g : C [ X , Y ]) → (f : C [ X , Y ]) → Set _
-  C ∣ X ⇒ Y [ g ≈ f ] = (Category._≈_ C g f) 
-
 F₀ : (Obj × Obj) → Obj
 F₀ (A , B) = A⊗B
   --[[[
@@ -263,10 +257,12 @@ module _ {A B : Obj × Obj} {f g : Product CohL' CohL' [ A , B ]} where
       F[g]⊆F[f] : pred (F₁ {A} {B} g) ⊆ pred (F₁ {A} {B} f)
       F[g]⊆F[f] {(a₁ , a₂) , (b₁ , b₂)} (a₁b₁∈g₁ , a₂b₂∈g₂) = g₁⊆f₁ a₁b₁∈g₁ , g₂⊆f₂ a₂b₂∈g₂
 
+infixr 10 _⊗₀_ _⊗₁_
+
 _⊗₀_ : Obj → Obj → Obj
 A ⊗₀ B = F₀ (A , B)
  
-_⊗₁_ : {A B C D : Obj} → (f : A ⇒ B) → (g : C ⇒ D) → (A ⊗₀ C) ⇒ (B ⊗₀ D) 
+_⊗₁_ : {A B C D : Obj} → (f : A ⇒' B) → (g : C ⇒' D) → (A ⊗₀ C) ⇒' (B ⊗₀ D) 
 f ⊗₁ g = F₁ (f , g) 
 
 ⊗ : Bifunctor CohL' CohL' CohL'

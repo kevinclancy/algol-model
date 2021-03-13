@@ -27,8 +27,6 @@ private
 symmetric : Symmetric monoidal
 symmetric = symmetricHelper monoidal (record { braiding = braiding ; commutative = {!!} ; hexagon = {!!} })
   where
-    flip-F₀ = Functor.F₀ (flip-bifunctor ⊗)
-
     η⇒ : ((X , Y) : Obj²) → (X ⊗₀ Y ⇒ Y ⊗₀ X)
     η⇒ (X , Y) = record
       { pred = pred

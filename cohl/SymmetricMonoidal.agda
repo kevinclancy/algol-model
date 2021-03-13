@@ -1,6 +1,5 @@
 {-# OPTIONS --without-K  --allow-unsolved-metas #-}
 
-
 open import Level
 
 module SymmetricMonoidal {c : Level} where
