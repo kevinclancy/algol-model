@@ -15,6 +15,7 @@ open import Categories.Category.Product
 open import Categories.Category.Monoidal.Symmetric
 open import Categories.Functor
 open import Categories.Functor.Bifunctor using (flip-bifunctor)
+open import Categories.Morphism
 open import Categories.NaturalTransformation
 open import Categories.NaturalTransformation.NaturalIsomorphism
 
@@ -228,11 +229,38 @@ symmetric = symmetricHelper monoidal (record { braiding = braiding ; commutative
       ; sym-commute = λ f → (proj₂ $ commute⇐ f) , (proj₁ $ commute⇐ f) 
       }
 
+    iso : ((X , Y) : Obj²) → Iso CohL' (η⇒ $ X , Y) (η⇐ $ X , Y)
+    iso (X , Y) = record 
+      { isoˡ = p , q
+      ; isoʳ = r , {!s!}
+      }
+      where
+        open _⇒'_
+
+        ≈X-trans = IsEquivalence.trans (CoherentSpace.≈-isEquivalence X)
+        ≈X-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence X)
+        ≈Y-trans = IsEquivalence.trans (CoherentSpace.≈-isEquivalence Y)
+        ≈Y-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence Y)
+
+        p : pred ((η⇐ $ X , Y) ∘ (η⇒ $ X , Y)) ⊆ pred (Category.id CohL' {X ⊗₀ Y})
+        p {(x , y) , (x'' , y'')} ((y' , x') , (x≈x' , y≈y') , (y'≈y'' , x'≈x'')) 
+          = (≈X-trans x≈x' x'≈x'' , ≈Y-trans y≈y' y'≈y'')
+
+        q : pred (Category.id CohL' {X ⊗₀ Y}) ⊆ pred ((η⇐ $ X , Y) ∘ (η⇒ $ X , Y))
+        q {(x , y) , (x' , y')} (x≈x' , y≈y') = (y , x) , (≈X-refl , ≈Y-refl) , (y≈y' , x≈x')
+
+        r : pred ((η⇒ $ X , Y) ∘ (η⇐ $ X , Y)) ⊆ pred (Category.id CohL' {Y ⊗₀ X})
+        r {(y , x) , (y'' , x'')} ((x' , y') , (y≈y' , x≈x') , (x'≈x'' , y'≈y'')) 
+          = ≈Y-trans y≈y' y'≈y'' , ≈X-trans x≈x' x'≈x''
+
+        s : pred (Category.id CohL' {Y ⊗₀ X}) ⊆ pred ((η⇐ $ Y , X) ∘ (η⇒ $ Y , X))
+        s {(y , x) , (y' , x')} (y≈y' , x≈x') = (x , y) , (≈Y-refl , ≈X-refl) , (x≈x' , y≈y')
+
     braiding : NaturalIsomorphism ⊗ (flip-bifunctor ⊗)
     braiding = record 
       { F⇒G = F⇒G
       ; F⇐G = F⇐G
-      ; iso = {!!}
+      ; iso = iso
       }
  
     -- symm′ : Categories.Category.Monoidal.Symmetric.Symmetric′ monoidal
