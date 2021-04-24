@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K  --allow-unsolved-metas #-}
 open import Level
 
 module Braiding {c : Level} where
