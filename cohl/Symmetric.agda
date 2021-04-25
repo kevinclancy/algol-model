@@ -6,10 +6,8 @@ module Symmetric {c : Level} where
 open import Function using (_$_)
 
 open import Data.Product
-open import Data.Sum
 open import Relation.Unary using (Pred ; _⊆_ ; _∈_)
-open import Relation.Binary using (IsEquivalence ; _Respects_)
-open import Relation.Nullary using (¬_)
+open import Relation.Binary using (IsEquivalence)
 
 open import Categories.Category
 open import Categories.Category.Product
@@ -24,7 +22,6 @@ open import CoherentSpace using (CohL ; CoherentSpace ; _⇒'_ ; _⇒ₗ_)
 open import Monoidal {c}
 open import Tensor {c}
 open import Braiding {c}
-
 
 private
   CohL' = CohL {c}
@@ -70,15 +67,15 @@ private
       ≈Y-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence Y)
       ≈Z-refl = IsEquivalence.refl (CoherentSpace.≈-isEquivalence Z)      
 
-    a : ((X ⊗₀ Y) ⊗₀ Z) ⇒ (Y ⊗₀ (Z ⊗₀ X))
-    a = (η⇒ $ X , Y) ⊗₁ (id {Z})     ⇒⟨ (Y ⊗₀ X) ⊗₀ Z ⟩
-        associator.from {Y} {X} {Z}  ⇒⟨ Y ⊗₀ (X ⊗₀ Z) ⟩
-        (id {Y}) ⊗₁ (η⇒ $ X , Z)
+      a : ((X ⊗₀ Y) ⊗₀ Z) ⇒ (Y ⊗₀ (Z ⊗₀ X))
+      a = (η⇒ $ X , Y) ⊗₁ (id {Z})     ⇒⟨ (Y ⊗₀ X) ⊗₀ Z ⟩
+          associator.from {Y} {X} {Z}  ⇒⟨ Y ⊗₀ (X ⊗₀ Z) ⟩
+          (id {Y}) ⊗₁ (η⇒ $ X , Z)
 
-    b : ((X ⊗₀ Y) ⊗₀ Z) ⇒ (Y ⊗₀ (Z ⊗₀ X))
-    b = associator.from {X} {Y} {Z}  ⇒⟨ X ⊗₀ (Y ⊗₀ Z) ⟩
-        (η⇒ $ X , Y ⊗₀ Z)            ⇒⟨ (Y ⊗₀ Z) ⊗₀ X ⟩
-        associator.from {Y} {Z} {X}
+      b : ((X ⊗₀ Y) ⊗₀ Z) ⇒ (Y ⊗₀ (Z ⊗₀ X))
+      b = associator.from {X} {Y} {Z}  ⇒⟨ X ⊗₀ (Y ⊗₀ Z) ⟩
+          (η⇒ $ X , Y ⊗₀ Z)            ⇒⟨ (Y ⊗₀ Z) ⊗₀ X ⟩
+          associator.from {Y} {Z} {X}
 
     hexagon : CohL' [ a ≈ b ]
     hexagon = a⊆b , b⊆a          
