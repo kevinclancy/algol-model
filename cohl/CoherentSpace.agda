@@ -7,6 +7,7 @@ open import Data.Sum using (_⊎_)
 open import Function hiding (_⇔_ ; _∘_)
 open import Relation.Binary hiding (_⇒_ ; _⇔_) 
 open import Relation.Binary.Lattice
+open import Relation.Binary.Definitions as BinRelDef
 open import Relation.Binary.PropositionalEquality as PE using (_≡_)
 open import Data.Product
 open import Data.Sum using (_⊎_ ; inj₁ ; inj₂)
@@ -35,7 +36,8 @@ record CoherentSpace c : Set (suc c) where
     ∼-sym  : Symmetric _∼_
     ∼-refl : Reflexive _∼_ 
 
-    ≈-isEquivalence : (IsEquivalence _≈_)
+    ≈-isEquivalence : IsEquivalence _≈_
+    ≈-decidable : BinRelDef.Decidable _≈_
 
   ∼-respʳ-≈ : _∼_ Respectsʳ _≈_ 
   ∼-respʳ-≈ {x} {y} {z} y≈z x∼y = ∼-sym $ ∼-respˡ-≈ y≈z (∼-sym x∼y)
@@ -127,6 +129,7 @@ _⇒ₗ_ {c} {c'} P Q = space
       ; _≈_ = _≈p×q_
       ; _∼_ = _∼p×q_
       ; ≈-isEquivalence = isEquivalence-≈p×q
+      ; ≈-decidable = decidable-≈p×q
       ; ∼-sym = ∼-sym
       ; ∼-refl = ∼-refl
       ; ∼-respˡ-≈ = ∼p×q-respˡ-≈p×q
@@ -139,9 +142,13 @@ _⇒ₗ_ {c} {c'} P Q = space
         isEquivalence-≈p×q : IsEquivalence (Pointwise _≈p_ _≈q_ )
         isEquivalence-≈p×q = ×-isEquivalence (CoherentSpace.≈-isEquivalence P) (CoherentSpace.≈-isEquivalence Q)
 
+        decidable-≈p×q : BinRelDef.Decidable _≈p×q_
+        decidable-≈p×q = ×-decidable (CoherentSpace.≈-decidable P) (CoherentSpace.≈-decidable Q)
+  
         ∼p×q-respˡ-≈p×q : _∼p×q_ Respectsˡ _≈p×q_   
+        --[[[
         ∼p×q-respˡ-≈p×q {p , q} {r , s} {r' , s'} (r≈r' , s≈s') (r∼p→s∼q , s≁q→r≁p) = r'∼p→s'∼q , s'≁q→r'≁p 
-          where
+         where
             r'∼p→s'∼q : (r' ∼p p) → (s' ∼q q) 
             r'∼p→s'∼q r'∼p = ∼q-respˡ-≈q s≈s' s∼q
               where
@@ -177,6 +184,7 @@ _⇒ₗ_ {c} {c'} P Q = space
 
                     s'∼q : s' ∼q q
                     s'∼q = ∼q-respˡ-≈q s≈s' s∼q 
+        --]]]
 
         ≈p×q→∼p×q : ∀ {pq : |P| × |Q|} {p'q' : |P| × |Q|} → pq ≈p×q p'q' → pq ∼p×q p'q'
         --[[[
@@ -222,7 +230,6 @@ _⇒ₗ_ {c} {c'} P Q = space
             q≁q→p≁p : q ≁q q → p ≁p p
             q≁q→p≁p q≁q = inj₁ ≈p-refl
 
-
 infixl 4 _⇒ₗ_
 
 record _⇒'_ {c} (A : CoherentSpace c) (B : CoherentSpace c) : Set (suc c) where
@@ -231,7 +238,21 @@ record _⇒'_ {c} (A : CoherentSpace c) (B : CoherentSpace c) : Set (suc c) wher
     pred    : Pred (CoherentSpace.TokenSet $ A ⇒ₗ B) c
     isPoint : CoherentSpace.isPoint (A ⇒ₗ B) pred
     resp-≈  : pred Respects (CoherentSpace._≈_ $ A ⇒ₗ B)
-   
+
+module _ {c} {P : CoherentSpace c} {Q : CoherentSpace c} where
+  open CoherentSpace Q renaming (TokenSet to |Q| ; _∼_ to _∼Q_ )
+  open CoherentSpace P renaming (TokenSet to |P| ; _∼_ to _∼P_ ; ∼-refl to ∼P-refl )
+  open CoherentSpace (P ⇒ₗ Q) renaming (TokenSet to |P⇒ₗQ| ; _∼_ to _∼P⇒ₗQ_)
+
+  ⇒'-functionalish : {p : |P|} → {q₁ q₂ : |Q|} → (f : P ⇒' Q) → (p , q₁) ∈ (_⇒'_.pred f) → (p , q₂) ∈ _⇒'_.pred f → q₁ ∼Q q₂
+  ⇒'-functionalish {p} {q₁} {q₂} f p,q₁∈f p,q₂∈f = p∼p→q₁∼q₂ $ ∼P-refl {p}
+    where
+      p,q₁∼p,q₂ : (p , q₁) ∼P⇒ₗQ (p , q₂) 
+      p,q₁∼p,q₂ = _⇒'_.isPoint f (p , q₁) (p , q₂) p,q₁∈f p,q₂∈f
+
+      p∼p→q₁∼q₂ : p ∼P p → q₁ ∼Q q₂
+      p∼p→q₁∼q₂ = proj₁ p,q₁∼p,q₂
+
 CohL : ∀ {c} → Category _ _ _
 CohL {c} = record
   { Obj = CoherentSpace c 

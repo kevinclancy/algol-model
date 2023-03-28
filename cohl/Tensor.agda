@@ -10,6 +10,7 @@ open import Data.Empty
 open import Relation.Binary using 
   (Rel ; _Respectsˡ_ ; Symmetric ; Transitive ; Reflexive ; IsEquivalence ; 
    _Respects_)
+open import Relation.Binary.Definitions as BinRelDef
 open import Relation.Unary hiding (_⇒_)
 open import Relation.Nullary using (¬_)
 
@@ -55,6 +56,7 @@ F₀ (A , B) = A⊗B
       ; ∼-sym = ∼A⊗B-sym
       ; ∼-refl = ∼A⊗B-refl
       ; ≈-isEquivalence = ≈A⊗B-isEquivalence
+      ; ≈-decidable = ≈A⊗B-decidable
       }
       where
         open import Data.Product.Relation.Binary.Pointwise.NonDependent
@@ -87,27 +89,10 @@ F₀ (A , B) = A⊗B
         ∼A⊗B-refl = ∼A-refl , ∼B-refl
 
         ≈A⊗B-isEquivalence : IsEquivalence _≈A⊗B_
-        ≈A⊗B-isEquivalence = record
-          { sym = ≈A⊗B-sym
-          ; refl = ≈A⊗B-refl
-          ; trans = ≈A⊗B-trans
-          }
-          where
-            open IsEquivalence (CoherentSpace.≈-isEquivalence A) renaming 
-              (refl to ≈A-refl ; sym to ≈A-sym ; trans to ≈A-trans)
+        ≈A⊗B-isEquivalence = ×-isEquivalence (CoherentSpace.≈-isEquivalence A) (CoherentSpace.≈-isEquivalence B) 
 
-            open IsEquivalence (CoherentSpace.≈-isEquivalence B) renaming 
-              (refl to ≈B-refl ; sym to ≈B-sym ; trans to ≈B-trans)
-
-            ≈A⊗B-sym : Symmetric _≈A⊗B_
-            ≈A⊗B-sym {a , b} {a' , b'} (a≈a' , b≈b') = ≈A-sym a≈a' , ≈B-sym b≈b'
-
-            ≈A⊗B-refl : Reflexive _≈A⊗B_
-            ≈A⊗B-refl {a , b} = ≈A-refl {a} , ≈B-refl {b} 
-
-            ≈A⊗B-trans : Transitive _≈A⊗B_
-            ≈A⊗B-trans {a , b} {a' , b'} {a'' , c''} (a≈a' , b≈b') (a'≈a'' , b'≈b'') = ≈A-trans a≈a' a'≈a'' , ≈B-trans b≈b' b'≈b''
-
+        ≈A⊗B-decidable : BinRelDef.Decidable _≈A⊗B_
+        ≈A⊗B-decidable = ×-decidable (CoherentSpace.≈-decidable A) (CoherentSpace.≈-decidable B)
   --]]]
 
 F₁ : {(A , B) : Obj × Obj} → {(C , D) : Obj × Obj} → 

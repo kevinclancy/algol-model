@@ -19,7 +19,7 @@ open import Relation.Nullary
 
 open import Categories.Category 
 open import Categories.Category.Monoidal
-open import Categories.Category.Monoidal.Structure using (SymmetricMonoidalCategory)
+open import Categories.Category.Monoidal.Bundle using (SymmetricMonoidalCategory)
 open import Categories.Morphism
 
 open import CoherentSpace using (CohL ; CoherentSpace ; _⇒'_)

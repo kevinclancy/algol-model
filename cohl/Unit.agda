@@ -9,6 +9,7 @@ open import Function using (_$_)
 open import Relation.Unary using (Pred ; _⊆_ ; _∈_)
 open import Relation.Binary using 
   (IsEquivalence; _Respects_)
+open import Relation.Binary.Definitions as BinRelDef
 open import Relation.Nullary using (¬_)
 
 open import Categories.Category
@@ -58,7 +59,11 @@ unit = record
     ; sym = ≈-sym
     ; trans = ≈-trans 
     } 
+  ; ≈-decidable = ≈-decidable
   }
+  where
+    ≈-decidable : BinRelDef.Decidable _≈1_
+    ≈-decidable ∗ ∗ = Relation.Nullary.yes $ ≈-refl {∗}
 
 module _ {X : Obj} where
   
@@ -498,7 +503,7 @@ module _ {X : Obj} {Y : Obj} {f : X ⇒ Y} where
       Y⊗1⇒Y = _≅_.from Y⊗1≅Y
   
       bottomLeft : X ⊗₀ unit ⇒ Y
-      bottomLeft = CohL' [ Y⊗1⇒Y ∘ (f ⊗₁ id {unit}) ]
+      bottomLeft = CohL' [ Y⊗1⇒Y ∘ (f ⊗₁ (id {unit})) ]
     
       topRight : X ⊗₀ unit ⇒ Y
       topRight = CohL' [ f ∘ X⊗1⇒X  ]
