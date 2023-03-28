@@ -8,11 +8,12 @@ open import Categories.Category renaming (_[_,_] to _[_,,_])
 open import Categories.Functor.Core using (Functor)
 open import CoherentSpace using (CohL ; CoherentSpace ; _⇒ₗ_)
 
+open import Relation.Binary using (
+  _Respects_ ; _Respectsˡ_ ; tri< ; tri> ; tri≈)
 open import Relation.Binary.Core renaming (Rel to BinRel)
-open import Relation.Binary.PropositionalEquality.Core as PE using (_≡_)
+open import Relation.Binary.PropositionalEquality.Core as PE
 open import Relation.Nullary using (yes ; no ; ¬_)
 open import Relation.Unary using (Pred ; _∈_)
-open import Relation.Binary.Definitions using (tri< ; tri> ; tri≈ ; _Respectsˡ_)
 open import Relation.Binary using 
   (Rel ; _Respectsˡ_ ; Symmetric ; Transitive ; Reflexive ; IsEquivalence ; 
    _Respects_)
@@ -20,7 +21,7 @@ open import Relation.Binary using
 open import Function using (_$_)
 
 open import Data.List
-open import Data.List.Relation.Binary.Pointwise as PW using (Pointwise) renaming (_∷_ to _∷PW_)
+open import Data.List.Relation.Binary.Pointwise as PW using (Pointwise) renaming (_∷_ to _∷PW_ ; [] to []PW)
 open import Data.Product using (_,_ ; proj₁ ; proj₂)
 open import Data.Sum using (_⊎_ ; inj₁ ; inj₂)
 open import Data.Empty using (⊥ ; ⊥-elim)
@@ -113,12 +114,13 @@ F₁ : ∀ {A B} → CohL' [ A ,, B ] → CohL' [ F₀ A ,, F₀ B ]
 F₁ {A} {B} f@(record { pred = pred-f ; isPoint = isPoint-f ; resp-≈ = resp-≈-f }) = record
   { pred = pred
   ; isPoint = isPoint
-  ; resp-≈ = {!!}
+  ; resp-≈ = resp-≈
   } 
   where
     |FA⇒ₗFB| = CoherentSpace.TokenSet $ (F₀ A) ⇒ₗ (F₀ B)
     _∼_ = CoherentSpace._∼_ $ (F₀ A) ⇒ₗ (F₀ B)
     _∼|A⇒ₗB|_ = CoherentSpace._∼_ $ A ⇒ₗ B
+    _≈|FA⇒ₗFB|_ = CoherentSpace._≈_ $ (F₀ A) ⇒ₗ (F₀ B)
 
     module ObjectSpaceA = ObjectSpace {A}
     open ObjectSpaceA
@@ -136,6 +138,7 @@ F₁ {A} {B} f@(record { pred = pred-f ; isPoint = isPoint-f ; resp-≈ = resp-�
     pred (as , bs) = Pointwise (λ a b → pred-f (a , b)) as bs
 
     isPoint : ((as₁ , bs₁) (as₂ , bs₂) : |FA⇒ₗFB|) → (as₁ , bs₁) ∈ pred → (as₂ , bs₂) ∈ pred → (as₁ , bs₁) ∼ (as₂ , bs₂)
+    --[[[
     isPoint (.[] , .[]) (.[] , .[]) Pointwise.[] Pointwise.[] = []∼†A[]→[]∼†B[] , []≁†B[]→[]≁†A
       where
         []∼†A[]→[]∼†B[] : [] ∼†A [] → [] ∼†B []
@@ -224,6 +227,19 @@ F₁ {A} {B} f@(record { pred = pred-f ; isPoint = isPoint-f ; resp-≈ = resp-�
             ¬a₁∷as₁∼a₂∷as₂ : ¬ ((a₁ ∷ as₁) ∼†A (a₂ ∷ as₂))
             ¬a₁∷as₁∼a₂∷as₂ a₁∷as₁∼a₂∷as₂ = ¬b₁∷bs₁∼b₂∷bs₂ (a₁∷as₁∼a₂∷as₂→b₁∷bs₁∼b₂∷bs₂ a₁∷as₁∼a₂∷as₂)
         --]]]
+    --]]]
+
+    resp-≈ : pred Respects _≈|FA⇒ₗFB|_
+    --[[[
+    resp-≈ {.[] , .[]} {.[] , .[]} (PW.[] , PW.[]) PW.[] = PW.[]
+    resp-≈ {a₁ ∷ as₁ , b₁ ∷ bs₁} {a₂ ∷ as₂ , b₂ ∷ bs₂} (a₁≈a₂ ∷PW as₁≈as₂ , b₁≈b₂ ∷PW bs₁≈bs₂) (a₁,b₁∈f ∷PW as₁,bs₁∈pred) = a₂,b₂∈f ∷PW as₂,bs₂∈pred
+      where
+        a₂,b₂∈f : (a₂ , b₂) ∈ pred-f
+        a₂,b₂∈f = resp-≈-f (a₁≈a₂ , b₁≈b₂) a₁,b₁∈f
+
+        as₂,bs₂∈pred : (as₂ , bs₂) ∈ pred
+        as₂,bs₂∈pred = resp-≈ (as₁≈as₂ , bs₁≈bs₂) as₁,bs₁∈pred
+    --]]]
 
 †_ : Functor CohL' CohL'
 †_ = record 
