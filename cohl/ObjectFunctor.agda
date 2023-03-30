@@ -6,14 +6,15 @@ module ObjectFunctor {c : Level} where
 
 open import Categories.Category renaming (_[_,_] to _[_,,_]) 
 open import Categories.Functor.Core using (Functor)
-open import CoherentSpace using (CohL ; CoherentSpace ; _⇒ₗ_)
+open import CoherentSpace using (CohL ; CoherentSpace ; _⇒ₗ_ ; _⇒'_)
 
 open import Relation.Binary using (
   _Respects_ ; _Respectsˡ_ ; tri< ; tri> ; tri≈)
 open import Relation.Binary.Core renaming (Rel to BinRel)
 open import Relation.Binary.PropositionalEquality.Core as PE
 open import Relation.Nullary using (yes ; no ; ¬_)
-open import Relation.Unary using (Pred ; _∈_)
+open import Relation.Unary using (Pred ; _∈_ ; _⊆_)
+open import Relation.Unary.Properties using (⊆-refl)
 open import Relation.Binary using 
   (Rel ; _Respectsˡ_ ; Symmetric ; Transitive ; Reflexive ; IsEquivalence ; 
    _Respects_)
@@ -30,6 +31,8 @@ private
   CohL' = CohL {c}
   CoherentSpace' = CoherentSpace c
   open Category CohL' using (_⇒_; _∘_; id)
+  CohL'[_∘_] = _[_∘_] CohL'
+  open Commutation CohL'
 
   variable
     A B : CoherentSpace'
@@ -109,7 +112,6 @@ F₀ A = †A
         ∼-refl {[]} = EmptyLeft
         ∼-refl {x ∷ x'} = HeadEqual (≈A-refl {x}) (∼-refl {x'})
          
-
 F₁ : ∀ {A B} → CohL' [ A ,, B ] → CohL' [ F₀ A ,, F₀ B ]
 F₁ {A} {B} f@(record { pred = pred-f ; isPoint = isPoint-f ; resp-≈ = resp-≈-f }) = record
   { pred = pred
@@ -241,11 +243,51 @@ F₁ {A} {B} f@(record { pred = pred-f ; isPoint = isPoint-f ; resp-≈ = resp-�
         as₂,bs₂∈pred = resp-≈ (as₁≈as₂ , bs₁≈bs₂) as₁,bs₁∈pred
     --]]]
 
+identity : {A : CoherentSpace'} → CohL' [ F₁ (id {A}) ≈ id {F₀ A} ]
+identity = (λ z → z) , (λ z → z)
+
+homomorphism : ∀ {X Y Z : CoherentSpace'} {f : CohL' [ X ,, Y ]} {g : CohL' [ Y ,, Z ]} → [ F₀ X ⇒ F₀ Z ]⟨  F₁ CohL'[ g ∘ f ] ≈ CohL'[ (F₁ g) ∘ (F₁ f) ] ⟩
+homomorphism {X} {Y} {Z} {f} {g} = left⊆right , right⊆left
+  where
+    open _⇒'_ 
+
+    left : CohL' [ F₀ X ,, F₀ Z ]
+    left = F₁ CohL'[ g ∘ f ]
+
+    right : CohL' [ F₀ X ,, F₀ Z ]
+    right = CohL'[ (F₁ g) ∘ (F₁ f) ]
+
+    left⊆right : pred left ⊆ pred right
+    left⊆right {[] , []} []PW = [] , []PW , []PW 
+    left⊆right {(x ∷ xs , z ∷ zs)} (x,z∈g∘f ∷PW rest) with xs,zs∈right 
+      where
+        xs,zs∈right : (xs , zs) ∈ pred right
+        xs,zs∈right = left⊆right rest
+    left⊆right {x ∷ xs , z ∷ zs} ((y , (x,y∈f , y,z∈g)) ∷PW rest) | ys , (xs,ys∈†f , ys,zs∈†g) = (y ∷ ys) , (x,y∈f ∷PW xs,ys∈†f) , (y,z∈g ∷PW ys,zs∈†g)
+
+    right⊆left : pred right ⊆ pred left
+    right⊆left {[] , []} ([] , []PW , []PW) = []PW
+    right⊆left {x ∷ xs , z ∷ zs} (y ∷ ys , x,y∈f ∷PW xs,ys∈†f , y,z∈g ∷PW ys,zs∈†g) = (y , x,y∈f , y,z∈g) ∷PW (right⊆left {xs , zs} (ys , xs,ys∈†f , ys,zs∈†g))
+
+F-resp-≈ : ∀ {A B : CoherentSpace'} {f g : CohL' [ A ,, B ]} → CohL' [ f ≈ g ] → CohL' [ F₁ f ≈ F₁ g ] 
+F-resp-≈ {A} {B} {f} {g} (f⊆g , g⊆f) = †f⊆†g , †g⊆†f
+  where
+    open _⇒'_
+
+    †f⊆†g : pred (F₁ f) ⊆ pred (F₁ g)
+    †f⊆†g {.[] , .[]} []PW = []PW
+    †f⊆†g {a ∷ as , b ∷ bs} (a,b∈f ∷PW as,bs∈†f) = (f⊆g a,b∈f) ∷PW (†f⊆†g as,bs∈†f)
+
+    †g⊆†f : pred (F₁ g) ⊆ pred (F₁ f)
+    †g⊆†f {.[] , .[]} []PW = []PW
+    †g⊆†f {a ∷ as , b ∷ bs} (a,b∈g ∷PW as,bs∈†g) = (g⊆f a,b∈g) ∷PW (†g⊆†f as,bs∈†g)
+
+
 †_ : Functor CohL' CohL'
 †_ = record 
   { F₀ = F₀ 
   ; F₁ = F₁
-  ; identity = {!!}
-  ; homomorphism = {!!}
-  ; F-resp-≈ = {!!}
+  ; identity = λ {A} → identity {A}
+  ; homomorphism = λ {X} {Y} {Z} {f} {g} → homomorphism {X} {Y} {Z} {f} {g}
+  ; F-resp-≈ = λ {A} {B} {f} {g} → F-resp-≈ {A} {B} {f} {g}
   }
