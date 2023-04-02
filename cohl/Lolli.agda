@@ -12,7 +12,7 @@ open import Relation.Unary using (Pred ; _⊆_ ; _∈_)
 open import Relation.Binary using (IsEquivalence ; _Respects_)
 open import Relation.Nullary using (yes ; no ; ¬_)
 
-open import Categories.Category
+open import Categories.Category renaming (_[_,_] to _[_,,_])
 open import Categories.Category.Product
 open import Categories.Category.Monoidal.Closed
 open import Categories.Functor hiding (id)
@@ -216,12 +216,61 @@ module _ {X Y : Obj} where
           y₀≈y₁ = y₀y₁∈id_⟨Y⊸Y⟩
     --]]]
 
--- (((x₀ , w₀) ∈ (pred f)) , ((y₀ , z₀) ∈ (pred g))) = {!!}
+
+private
+  CohL'-op-×-CohL' = Product (Category.op CohL') CohL'
+  
+module _ {X Y Z : Obj²} {f : CohL'-op-×-CohL' [ X ,, Y ]} {g : CohL'-op-×-CohL' [ Y ,, Z ]} where
+  private
+    f₁ = proj₁ f
+    f₂ = proj₂ f
+    g₁ = proj₁ g
+    g₂ = proj₂ g
+
+    g∘f = CohL'-op-×-CohL' [ g ∘ f ]
+    ⟨g∘f⟩₁ = proj₁ g∘f
+    ⟨g∘f⟩₂ = proj₂ g∘f
+
+    g₁⊸g₂ = g₁ ⊸₁ g₂
+    f₁⊸f₂ = f₁ ⊸₁ f₂
+
+    ⟨g∘f⟩₁⊸⟨g∘f⟩₂ = ⟨g∘f⟩₁ ⊸₁ ⟨g∘f⟩₂
+    ⟨g₁⊸g₂⟩∘⟨f₁⊸f₂⟩ = CohL' [ g₁⊸g₂ ∘ f₁⊸f₂ ]
+
+    open _⇒'_
+
+  homomorphism : CohL' [ ⟨g∘f⟩₁⊸⟨g∘f⟩₂ ≈ ⟨g₁⊸g₂⟩∘⟨f₁⊸f₂⟩  ]
+  homomorphism = p , q
+    where
+      p : pred ⟨g∘f⟩₁⊸⟨g∘f⟩₂ ⊆ pred ⟨g₁⊸g₂⟩∘⟨f₁⊸f₂⟩
+      p {(x₁ , x₂) , (z₁ , z₂)} ((y₁ , z₁y₁∈g₁ , y₁x₁∈f₁) , (y₂ , x₂y₂∈f₂ , y₂z₂∈g₂)) = (y₁ , y₂) , (y₁x₁∈f₁ , x₂y₂∈f₂) , (z₁y₁∈g₁ , y₂z₂∈g₂)
+   
+      q : pred ⟨g₁⊸g₂⟩∘⟨f₁⊸f₂⟩ ⊆ pred ⟨g∘f⟩₁⊸⟨g∘f⟩₂
+      q {(x₁ , x₂) , z₁ , z₂} ((y₁ , y₂) , (y₁x₁∈f₁ , x₂y₂∈f₂) , (z₁y₁∈g₁ , y₂z₂∈g₂)) = ((y₁ , z₁y₁∈g₁ , y₁x₁∈f₁) , (y₂ , x₂y₂∈f₂ , y₂z₂∈g₂))
+
+module _ {X Y : Obj²} {f g : CohL'-op-×-CohL' [ X ,, Y ]} where
+  private
+    f₁ = proj₁ f
+    f₂ = proj₂ f
+    g₁ = proj₁ g
+    g₂ = proj₂ g
+
+    open _⇒'_
+
+  F-resp-≈ : CohL'-op-×-CohL' [ f ≈ g ] → CohL' [ f₁ ⊸₁ f₂ ≈ g₁ ⊸₁ g₂ ]
+  F-resp-≈ ((f₁⊆g₁ , g₁⊆f₁) , (f₂⊆g₂ , g₂⊆f₂)) = f₁⊸f₂⊆g₁⊸g₂ , g₁⊸g₂⊆f₁⊸f₂
+    where
+      f₁⊸f₂⊆g₁⊸g₂ : pred (f₁ ⊸₁ f₂) ⊆ pred (g₁ ⊸₁ g₂)
+      f₁⊸f₂⊆g₁⊸g₂ {(x₁ , x₂) , (y₁ , y₂)} (y₁x₁∈f₁ , x₂y₂∈f₂) = f₁⊆g₁ y₁x₁∈f₁ , f₂⊆g₂ x₂y₂∈f₂
+
+      g₁⊸g₂⊆f₁⊸f₂ : pred (g₁ ⊸₁ g₂) ⊆ pred (f₁ ⊸₁ f₂)
+      g₁⊸g₂⊆f₁⊸f₂ {(x₁ , x₂) , (y₁ , y₂)} (y₁x₁∈g₁ , x₂y₂∈g₂) = g₁⊆f₁ y₁x₁∈g₁ , g₂⊆f₂ x₂y₂∈g₂
+
 [-,-] : Bifunctor (Category.op CohL') CohL' CohL'
 [-,-] = record
     { F₀ = λ (X , Y) → (X ⊸₀ Y)
     ; F₁ = λ (f , g) → (f ⊸₁ g)
     ; identity = λ {X,Y} → identity {proj₁ X,Y} {proj₂ X,Y}
-    ; homomorphism = {!!}
-    ; F-resp-≈ = {!!}
+    ; homomorphism = λ {X} {Y} {Z} {f} {g} → homomorphism {X} {Y} {Z} {f} {g} 
+    ; F-resp-≈ = λ {X} {Y} {f} {g} → F-resp-≈ {X} {Y} {f} {g}
     }
