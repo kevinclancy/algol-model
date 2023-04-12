@@ -6,15 +6,14 @@ module Lolli {c : Level} where
 open import Function using (_$_)
 
 open import Data.Product
-open import Data.Sum
+open import Data.Sum using (inj₁ ; inj₂)
 open import Data.Empty using (⊥ ; ⊥-elim)
 open import Relation.Unary using (Pred ; _⊆_ ; _∈_)
 open import Relation.Binary using (IsEquivalence ; _Respects_)
 open import Relation.Nullary using (yes ; no ; ¬_)
 
-open import Categories.Category renaming (_[_,_] to _[_,,_])
+open import Categories.Category
 open import Categories.Category.Product
-open import Categories.Category.Monoidal.Closed
 open import Categories.Functor hiding (id)
 open import Categories.Functor.Bifunctor using (flip-bifunctor ; Bifunctor)
 open import Categories.Morphism
@@ -29,8 +28,6 @@ private
   CoherentSpace' = Category.Obj CohL'
   open Category CohL' using (Obj ; _⇒_)
   open Category (Product CohL' CohL') renaming (Obj to Obj² ; _⇒_ to _⇒²_)
-
-  -- open Category (Category.op CohL') renaming (Obj to CoherentSpace'-op)
 
 _⊸₀_ : Obj -> Obj -> Obj
 X ⊸₀ Y = X ⇒ₗ Y
@@ -216,11 +213,10 @@ module _ {X Y : Obj} where
           y₀≈y₁ = y₀y₁∈id_⟨Y⊸Y⟩
     --]]]
 
-
 private
   CohL'-op-×-CohL' = Product (Category.op CohL') CohL'
   
-module _ {X Y Z : Obj²} {f : CohL'-op-×-CohL' [ X ,, Y ]} {g : CohL'-op-×-CohL' [ Y ,, Z ]} where
+module _ {X Y Z : Obj²} {f : CohL'-op-×-CohL' [ X , Y ]} {g : CohL'-op-×-CohL' [ Y , Z ]} where
   private
     f₁ = proj₁ f
     f₂ = proj₂ f
@@ -248,7 +244,7 @@ module _ {X Y Z : Obj²} {f : CohL'-op-×-CohL' [ X ,, Y ]} {g : CohL'-op-×-Coh
       q : pred ⟨g₁⊸g₂⟩∘⟨f₁⊸f₂⟩ ⊆ pred ⟨g∘f⟩₁⊸⟨g∘f⟩₂
       q {(x₁ , x₂) , z₁ , z₂} ((y₁ , y₂) , (y₁x₁∈f₁ , x₂y₂∈f₂) , (z₁y₁∈g₁ , y₂z₂∈g₂)) = ((y₁ , z₁y₁∈g₁ , y₁x₁∈f₁) , (y₂ , x₂y₂∈f₂ , y₂z₂∈g₂))
 
-module _ {X Y : Obj²} {f g : CohL'-op-×-CohL' [ X ,, Y ]} where
+module _ {X Y : Obj²} {f g : CohL'-op-×-CohL' [ X , Y ]} where
   private
     f₁ = proj₁ f
     f₂ = proj₂ f
@@ -266,8 +262,8 @@ module _ {X Y : Obj²} {f g : CohL'-op-×-CohL' [ X ,, Y ]} where
       g₁⊸g₂⊆f₁⊸f₂ : pred (g₁ ⊸₁ g₂) ⊆ pred (f₁ ⊸₁ f₂)
       g₁⊸g₂⊆f₁⊸f₂ {(x₁ , x₂) , (y₁ , y₂)} (y₁x₁∈g₁ , x₂y₂∈g₂) = g₁⊆f₁ y₁x₁∈g₁ , g₂⊆f₂ x₂y₂∈g₂
 
-[-,-] : Bifunctor (Category.op CohL') CohL' CohL'
-[-,-] = record
+⊸ : Bifunctor (Category.op CohL') CohL' CohL'
+⊸ = record
     { F₀ = λ (X , Y) → (X ⊸₀ Y)
     ; F₁ = λ (f , g) → (f ⊸₁ g)
     ; identity = λ {X,Y} → identity {proj₁ X,Y} {proj₂ X,Y}

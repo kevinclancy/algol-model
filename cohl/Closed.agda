@@ -3,190 +3,48 @@ open import Level
 
 module Closed {c : Level} where
 
-open import Function using (_$_)
-
-open import Data.Product
-open import Data.Sum
-open import Data.Empty using (⊥ ; ⊥-elim)
-open import Relation.Unary using (Pred ; _⊆_ ; _∈_)
-open import Relation.Binary using (IsEquivalence ; _Respects_)
-open import Relation.Nullary using (yes ; no ; ¬_)
 
 open import Categories.Category
 open import Categories.Category.Product
-open import Categories.Category.Monoidal.Closed
-open import Categories.Functor hiding (id)
-open import Categories.Functor.Bifunctor using (flip-bifunctor ; Bifunctor)
-open import Categories.Morphism
-open import Categories.NaturalTransformation hiding (id)
-open import Categories.NaturalTransformation.NaturalIsomorphism hiding (associator)
-
+open import Categories.NaturalTransformation using (NaturalTransformation)
+open import Categories.Functor
+open import Categories.Category.Monoidal using (Monoidal)
+open import Categories.Functor.Bifunctor using (appˡ ; Bifunctor)
 open import CoherentSpace using (CohL ; CoherentSpace ; _⇒'_ ; _⇒ₗ_)
-open import Monoidal {c}
+open import Categories.Category.Monoidal.Closed using (Closed)
+open import Categories.Adjoint using (_⊣_)
+open import Lolli using (⊸ ; _⊸₀_ ; _⊸₁_)
+open import Tensor using (⊗ ; _⊗₀_ ; _⊗₁_)
+open import Monoidal {c} using (monoidal)
 
 private
   CohL' = CohL {c}
-  open Category CohL' using (Obj ; _⇒_)
+  CoherentSpace' = Category.Obj CohL'
+  open Category CohL' using (Obj ; _⇒_ )
   open Category (Product CohL' CohL') renaming (Obj to Obj² ; _⇒_ to _⇒²_)
+  open Monoidal monoidal using (-⊗_)
 
-  _⊸₀_ : Obj -> Obj -> Obj
-  X ⊸₀ Y = X ⇒ₗ Y
+module _ {X : Obj} where
 
-  _⊸₁_ : {(W , X) : Obj²} → {(Y , Z) : Obj²} → ((f , g) : (X ⇒ W) × (Y ⇒ Z)) → (W ⊸₀ Y) ⇒ (X ⊸₀ Z) 
-  _⊸₁_ {W , X} {Y , Z} (f , g) = record { pred = p ; isPoint = q ; resp-≈ = {!!} }
+  _⊗X⊣X⊸_ : (-⊗ X) ⊣ (appˡ ⊸ X)
+  _⊗X⊣X⊸_ = record { unit = unit ; counit = counit ; zig = λ {A} → zig {A} ; zag = λ {A} → zag {A} }
     where
-      open _⇒'_
+      unit : NaturalTransformation Categories.Functor.id (appˡ ⊸ X ∘F (-⊗ X)) 
+      unit = record { η = {!!} ; commute = {!!} ; sym-commute = {!!} }
 
-      _≁W_ = CoherentSpace._≁_ W
-      _≁X_ = CoherentSpace._≁_ X
-      _≁Y_ = CoherentSpace._≁_ Y
-      _≁Z_ = CoherentSpace._≁_ Z
+      counit : NaturalTransformation ((-⊗ X) ∘F appˡ ⊸ X) Categories.Functor.id
+      counit = record { η = ? ; commute = ? ; sym-commute = ? }
 
-      _∼W_ = CoherentSpace._∼_ W
-      _∼X_ = CoherentSpace._∼_ X
-      _∼Y_ = CoherentSpace._∼_ Y
-      _∼Z_ = CoherentSpace._∼_ Z
+      zig : {A : Obj} → CohL' [ CohL' [ NaturalTransformation.η counit (A ⊗₀ X) ∘ Functor.F₁ (-⊗ X) (NaturalTransformation.η unit A) ] ≈ Category.id CohL' {A ⊗₀ X} ]
+      zig {A} = {!!}
 
-      _≈W_ = CoherentSpace._≈_ W
-      _≈X_ = CoherentSpace._≈_ X
-      _≈Y_ = CoherentSpace._≈_ Y
-      _≈Z_ = CoherentSpace._≈_ Z
+      zag : {A : Obj} → CohL' [ CohL' [ Functor.F₁ (appˡ ⊸ X) (NaturalTransformation.η counit A) ∘ NaturalTransformation.η unit (Functor.F₀ (appˡ ⊸ X) A) ] ≈ Category.id CohL' {X ⊸₀ A} ]
+      zag {A} = {!!}
 
-      _≁W⊸Y_ = CoherentSpace._≁_ (W ⊸₀ Y)
-      _≁X⊸Z_ = CoherentSpace._≁_ (X ⊸₀ Z)
-
-      _∼W⊸Y_ = CoherentSpace._∼_ (W ⊸₀ Y)
-      _∼X⊸Z_ = CoherentSpace._∼_ (X ⊸₀ Z)
-
-      p : Pred (CoherentSpace.TokenSet $ (W ⊸₀ Y) ⇒ₗ (X ⊸₀ Z)) c
-      p ((w , y) , (x , z)) = ((x , w) ∈ pred f) × ((y , z) ∈ pred g) 
-  
-      q : CoherentSpace.isPoint ((W ⊸₀ Y) ⇒ₗ (X ⊸₀ Z)) p
-      q ((w₀ , y₀) , (x₀ , z₀)) ((w₁ , y₁) , (x₁ , z₁)) (x₀w₀∈f , y₀z₀∈g) (x₁w₁∈f , y₁z₁∈g) 
-        = w₀y₀∼w₁y₁→x₀z₀∼x₁z₁ , x₀z₀≁x₁z₁→w₀y₀≁w₁y₁
-        where
-          --[[[
-          x₀∼x₁→w₀∼w₁ = proj₁ (isPoint f (x₀ , w₀) (x₁ , w₁) x₀w₀∈f x₁w₁∈f)
-          w₀≁w₁→x₀≁x₁ = proj₂ (isPoint f (x₀ , w₀) (x₁ , w₁) x₀w₀∈f x₁w₁∈f)
-
-          y₀∼y₁→z₀∼z₁ = proj₁ (isPoint g (y₀ , z₀) (y₁ , z₁) y₀z₀∈g y₁z₁∈g)
-          z₀≁z₁→y₀≁y₁ = proj₂ (isPoint g (y₀ , z₀) (y₁ , z₁) y₀z₀∈g y₁z₁∈g)
-
-          w₀y₀∼w₁y₁→x₀z₀∼x₁z₁ : (w₀ , y₀) ∼W⊸Y (w₁ , y₁) → (x₀ , z₀) ∼X⊸Z (x₁ , z₁)
-          --[[[
-          w₀y₀∼w₁y₁→x₀z₀∼x₁z₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) = x₀∼x₁→z₀∼z₁ , z₀≁z₁→x₀≁x₁ 
-            where
-              x₀∼x₁→z₀∼z₁ : x₀ ∼X x₁ → z₀ ∼Z z₁
-              x₀∼x₁→z₀∼z₁ x₀∼x₁ = z₀∼z₁
-                where
-                  w₀∼w₁ : w₀ ∼W w₁
-                  w₀∼w₁ = x₀∼x₁→w₀∼w₁ x₀∼x₁
-
-                  y₀∼y₁ : y₀ ∼Y y₁
-                  y₀∼y₁ = w₀∼w₁→y₀∼y₁ w₀∼w₁
-
-                  z₀∼z₁ : z₀ ∼Z z₁
-                  z₀∼z₁ = y₀∼y₁→z₀∼z₁ y₀∼y₁
-
-              z₀≁z₁→x₀≁x₁ : z₀ ≁Z z₁ → x₀ ≁X x₁
-              z₀≁z₁→x₀≁x₁ z₀≁z₁ = x₀≁x₁
-                where
-                  y₀≁y₁ : y₀ ≁Y y₁
-                  y₀≁y₁ = z₀≁z₁→y₀≁y₁ z₀≁z₁
-      
-                  w₀≁w₁ : w₀ ≁W w₁
-                  w₀≁w₁ = y₀≁y₁→w₀≁w₁ y₀≁y₁
-
-                  x₀≁x₁ : x₀ ≁X x₁
-                  x₀≁x₁ = w₀≁w₁→x₀≁x₁ w₀≁w₁
-          --]]]
-
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ : (x₀ , z₀) ≁X⊸Z (x₁ , z₁) → (w₀ , y₀) ≁W⊸Y (w₁ , y₁)
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ (inj₁ (x₀≈x₁ , z₀≈z₁)) with y₀≁y₁
-            where
-              y₀≁y₁ : y₀ ≁Y y₁
-              y₀≁y₁ = z₀≁z₁→y₀≁y₁ (inj₁ z₀≈z₁)
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ (inj₁ (x₀≈x₁ , z₀≈z₁)) | inj₁ y₀≈y₁ with CoherentSpace.≈-decidable W w₀ w₁ 
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ (inj₁ (x₀≈x₁ , z₀≈z₁)) | inj₁ y₀≈y₁ | yes w₀≈w₁ = inj₁ (w₀≈w₁ , y₀≈y₁)
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ (inj₁ (x₀≈x₁ , z₀≈z₁)) | inj₁ y₀≈y₁ | no ¬w₀≈w₁ = inj₂ ¬w₀y₀∼w₁y₁ -- I need ⊥-elim here 
-            where
-              --[[[
-              ≈X→∼X = CoherentSpace.≈→∼ X
-              
-              w₀∼w₁ : w₀ ∼W w₁
-              w₀∼w₁ = x₀∼x₁→w₀∼w₁ (≈X→∼X x₀≈x₁)
-
-              ¬w₀y₀∼w₁y₁ : ¬ (w₀ , y₀) ∼W⊸Y (w₁ , y₁)
-              ¬w₀y₀∼w₁y₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) with w₀≁w₁
-                where
-                  w₀≁w₁ : w₀ ≁W w₁
-                  w₀≁w₁ = y₀≁y₁→w₀≁w₁ (inj₁ y₀≈y₁)
-              ¬w₀y₀∼w₁y₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) | inj₁ w₀≈w₁ = ¬w₀≈w₁ w₀≈w₁
-              ¬w₀y₀∼w₁y₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) | inj₂ ¬w₀∼w₁ = ¬w₀∼w₁ w₀∼w₁
-              --]]]
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ (inj₁ (x₀≈x₁ , z₀≈z₁)) | inj₂ ¬y₀∼y₁ with CoherentSpace.≈-decidable W w₀ w₁
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ (inj₁ (x₀≈x₁ , z₀≈z₁)) | inj₂ ¬y₀∼y₁ | yes w₀≈w₁ = inj₂ ¬w₀y₀∼w₁y₁
-            where
-              --[[[
-              ≈W→∼W = CoherentSpace.≈→∼ W
-
-              ¬w₀y₀∼w₁y₁ : ¬ (w₀ , y₀) ∼W⊸Y (w₁ , y₁)
-              ¬w₀y₀∼w₁y₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) = ¬y₀∼y₁ y₀∼y₁
-                where
-                  y₀∼y₁ : y₀ ∼Y y₁
-                  y₀∼y₁ = w₀∼w₁→y₀∼y₁ (≈W→∼W w₀≈w₁)
-              --]]]
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ (inj₁ (x₀≈x₁ , z₀≈z₁)) | inj₂ ¬y₀∼y₁ | no ¬w₀≈w₁ = inj₂ ¬w₀y₀∼w₁y₁
-            where
-              --[[[
-              ≈X→∼X = CoherentSpace.≈→∼ X
-              
-              w₀∼w₁ : w₀ ∼W w₁
-              w₀∼w₁ = x₀∼x₁→w₀∼w₁ (≈X→∼X x₀≈x₁)
-
-              y₀≁y₁ : y₀ ≁Y y₁
-              y₀≁y₁ = inj₂ ¬y₀∼y₁
-          
-              ¬w₀y₀∼w₁y₁ : ¬ (w₀ , y₀) ∼W⊸Y (w₁ , y₁)
-              ¬w₀y₀∼w₁y₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) with w₀≁w₁
-                where
-                  w₀≁w₁ = y₀≁y₁→w₀≁w₁ y₀≁y₁
-              ¬w₀y₀∼w₁y₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) | inj₁ w₀≈w₁ = ¬w₀≈w₁ w₀≈w₁
-              ¬w₀y₀∼w₁y₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) | inj₂ ¬w₀∼w₁ = ¬w₀∼w₁ w₀∼w₁
-              --]]]
-          x₀z₀≁x₁z₁→w₀y₀≁w₁y₁ (inj₂ ¬x₀z₀∼x₁z₁) = inj₂ ¬w₀y₀∼w₁y₁
-            where
-              --[[[
-              ¬w₀y₀∼w₁y₁ : ¬ (w₀ , y₀) ∼W⊸Y (w₁ , y₁)
-              ¬w₀y₀∼w₁y₁ (w₀∼w₁→y₀∼y₁ , y₀≁y₁→w₀≁w₁) = ⊥-elim $ ¬x₀z₀∼x₁z₁ x₀z₀∼x₁z₁
-                where
-                  x₀∼x₁→z₀∼z₁ : (x₀ ∼X x₁) → (z₀ ∼Z z₁)
-                  x₀∼x₁→z₀∼z₁ x₀∼x₁ = y₀∼y₁→z₀∼z₁ (w₀∼w₁→y₀∼y₁ (x₀∼x₁→w₀∼w₁ x₀∼x₁))
-
-                  z₀≁z₁→x₀≁x₁ : (z₀ ≁Z z₁) → (x₀ ≁X x₁)
-                  z₀≁z₁→x₀≁x₁ z₀≁z₁ = w₀≁w₁→x₀≁x₁ (y₀≁y₁→w₀≁w₁ (z₀≁z₁→y₀≁y₁ z₀≁z₁))
-
-                  x₀z₀∼x₁z₁ : (x₀ , z₀) ∼X⊸Z (x₁ , z₁)
-                  x₀z₀∼x₁z₁ = x₀∼x₁→z₀∼z₁ , z₀≁z₁→x₀≁x₁
-              --]]]
-          --]]]
-
-      r : p Respects (CoherentSpace._≈_ $ (W ⊸₀ Y) ⇒ₗ (X ⊸₀ Z))
-      r = {!!}
-
-  [-,-] : Bifunctor (Category.op CohL') CohL' CohL'
-  [-,-] = record 
-    { F₀ = λ (X , Y) → (X ⊸₀ Y)
-    ; F₁ = _⊸₁_ 
-    ; identity = {!!}
-    ; homomorphism = {!!}
-    ; F-resp-≈ = {!!} 
-    }
-  
 closed : Closed monoidal
 closed = record
-  { [-,-]   = [-,-] 
-  ; adjoint = {!!}
+  { [-,-]   = ⊸
+  ; adjoint = λ {X} → _⊗X⊣X⊸_ {X}
   ; mate = {!!}
   }
     
